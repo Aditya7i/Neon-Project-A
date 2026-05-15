@@ -1,0 +1,520 @@
+/**
+ * Neon Silhouette Dashboard - Neural Auth Edition
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // DOM Elements - PHASES
+    const loginPhase = document.getElementById('login-phase');
+    const dashboardPhase = document.getElementById('dashboard-phase');
+    const registerModal = document.getElementById('register-modal');
+
+    // DOM Elements - LOGIN
+    const loginBtn = document.getElementById('login-btn');
+    const showRegisterBtn = document.getElementById('show-register-btn');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginError = document.getElementById('error-msg');
+    const loginAvatarPreview = document.getElementById('login-avatar-preview');
+    const previewUsername = document.getElementById('preview-username');
+
+    // DOM Elements - REGISTER
+    const regUsername = document.getElementById('reg-username');
+    const regEmail = document.getElementById('reg-email');
+    const regPassword = document.getElementById('reg-password');
+    const regError = document.getElementById('reg-error');
+    const regSubmitBtn = document.getElementById('reg-submit-btn');
+    const avatarUpload = document.getElementById('avatar-upload');
+    const regAvatarPreview = document.getElementById('register-avatar-preview');
+    const closeRegisterBtn = document.getElementById('close-register-btn');
+
+    // DOM Elements - DASHBOARD
+    const headerUsername = document.getElementById('header-username');
+    const headerAvatar = document.getElementById('header-avatar');
+    const currentTime = document.getElementById('current-time');
+    const currentDateEl = document.getElementById('current-date');
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const views = document.querySelectorAll('.view');
+    const navLogout = document.getElementById('nav-logout');
+
+    // DOM Elements - TODO
+    const todoInput = document.getElementById('todo-input');
+    const addTodoBtn = document.getElementById('add-todo-btn');
+    const todoList = document.getElementById('todo-list');
+    const todoCountDisplay = document.getElementById('todo-count-display');
+
+    // DOM Elements - JOURNAL
+    const journalList = document.getElementById('journal-list');
+    const journalTitle = document.getElementById('journal-title');
+    const journalBody = document.getElementById('journal-body');
+    const saveJournalBtn = document.getElementById('save-journal-btn');
+    const addJournalBtn = document.getElementById('add-journal-btn');
+    const journalCountDisplay = document.getElementById('journal-count-display');
+
+    // DOM Elements - SCHEDULE
+    const schEvent = document.getElementById('sch-event');
+    const schDate = document.getElementById('sch-date');
+    const schTime = document.getElementById('sch-time');
+    const addSchBtn = document.getElementById('add-sch-btn');
+    const dashScheduleList = document.getElementById('dash-schedule-list');
+    const fullScheduleList = document.getElementById('full-schedule-list');
+
+    // DOM Elements - WHITEBOARD
+    const wbCanvas = document.getElementById('whiteboard-canvas');
+    const wbPen = document.getElementById('wb-pen');
+    const wbEraser = document.getElementById('wb-eraser');
+    const wbClear = document.getElementById('wb-clear');
+    const wbSave = document.getElementById('wb-save');
+
+    // State
+    let currentUser = null;
+    let selectedJournalId = null;
+    let wbMode = 'pen';
+    let isDrawing = false;
+    let ctx = null;
+
+    // --- INITIALIZATION ---
+    checkSession();
+    startTimeUpdate();
+
+    // --- CLOCK ---
+    function startTimeUpdate() {
+        setInterval(() => {
+            const now = new Date();
+            currentTime.textContent = now.toLocaleTimeString('en-US', { hour12: false });
+            currentDateEl.textContent = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }, 1000);
+    }
+
+    // --- AUTH LOGIC ---
+
+    async function checkSession() {
+        try {
+            const resp = await fetch('/api/current-user');
+            const user = await resp.json();
+            if (user && user.username) {
+                currentUser = user;
+                transitionToDashboard();
+            }
+        } catch (err) {
+            console.log('No active session.');
+        }
+    }
+
+    async function handleLogin() {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+
+        if (!username || !password) {
+            return showError(loginError, 'Please input credentials');
+        }
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                currentUser = result.userData;
+                transitionToDashboard();
+            } else {
+                showError(loginError, result.message || 'Access Denied');
+            }
+        } catch (err) {
+            showError(loginError, 'Network anomalies detected');
+        }
+    }
+
+    async function handleRegister() {
+        const username = regUsername.value;
+        const email = regEmail.value;
+        const password = regPassword.value;
+        const avatarBase64 = regAvatarPreview.src.startsWith('data:') ? regAvatarPreview.src : null;
+
+        if (!username || !email || password.length < 6) {
+            return showError(regError, 'Invalid enrollment data (Pass min 6)');
+        }
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password, avatarBase64 })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Account Initialized. Commencing sync...');
+                regUsername.value = '';
+                regEmail.value = '';
+                regPassword.value = '';
+                hideRegisterModal();
+                
+                // Set login inputs for convenience
+                usernameInput.value = username;
+                passwordInput.value = password;
+                updatePreviewAvatar(avatarBase64, username);
+            } else {
+                showError(regError, result.message);
+            }
+        } catch (err) {
+            showError(regError, 'Enrollment failed. Try again.');
+        }
+    }
+
+    async function handleLogout() {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            currentUser = null;
+            dashboardPhase.classList.add('hidden');
+            setTimeout(() => {
+                loginPhase.classList.remove('hidden');
+                loginPhase.classList.add('active');
+            }, 500);
+        } catch (err) {
+            console.error('Logout error');
+        }
+    }
+
+    // --- NAVIGATION ---
+
+    function switchView(viewName) {
+        views.forEach(v => v.classList.add('hidden'));
+        const targetView = document.getElementById(`view-${viewName}`);
+        if (targetView) targetView.classList.remove('hidden');
+
+        navButtons.forEach(b => {
+            if (b.dataset.view === viewName) b.classList.add('active');
+            else b.classList.remove('active');
+        });
+
+        if (viewName === 'whiteboard') initWhiteboard();
+        if (viewName === 'todo') fetchTodos();
+        if (viewName === 'journal') fetchJournals();
+        if (viewName === 'calendar') fetchSchedules();
+        if (viewName === 'overview') updateDashboardStats();
+    }
+
+    // --- TODO LOGIC ---
+
+    async function fetchTodos() {
+        const resp = await fetch('/api/todos');
+        const todos = await resp.json();
+        renderTodos(todos);
+        todoCountDisplay.textContent = String(todos.filter(t => !t.completed).length).padStart(2, '0');
+    }
+
+    function renderTodos(todos) {
+        todoList.innerHTML = '';
+        todos.forEach(todo => {
+            const div = document.createElement('div');
+            div.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+            div.innerHTML = `
+                <button class="toggle-todo w-5 h-5 border border-neon/30 rounded flex items-center justify-center text-neon">
+                    ${todo.completed ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
+                </button>
+                <span class="flex-1 font-mono text-xs">${todo.content}</span>
+                <button class="delete-todo text-gray-700 hover:text-red-500 transition-colors">
+                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                </button>
+            `;
+            
+            div.querySelector('.toggle-todo').onclick = () => toggleTodo(todo.id, !todo.completed);
+            div.querySelector('.delete-todo').onclick = () => deleteTodo(todo.id);
+            
+            todoList.appendChild(div);
+        });
+        lucide.createIcons();
+    }
+
+    async function addTodo() {
+        const content = todoInput.value;
+        if (!content) return;
+        await fetch('/api/todos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        todoInput.value = '';
+        fetchTodos();
+    }
+
+    async function toggleTodo(id, completed) {
+        await fetch('/api/todos/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, completed })
+        });
+        fetchTodos();
+    }
+
+    async function deleteTodo(id) {
+        await fetch('/api/todos/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        fetchTodos();
+    }
+
+    // --- JOURNAL LOGIC ---
+
+    async function fetchJournals() {
+        const resp = await fetch('/api/journals');
+        const journals = await resp.json();
+        renderJournals(journals);
+        journalCountDisplay.textContent = String(journals.length).padStart(2, '0');
+    }
+
+    function renderJournals(journals) {
+        journalList.innerHTML = '';
+        journals.forEach(j => {
+            const div = document.createElement('div');
+            div.className = `journal-item ${selectedJournalId === j.id ? 'active' : ''}`;
+            div.innerHTML = `
+                <h4 class="text-xs font-bold truncate">${j.title || 'Untitled'}</h4>
+                <p class="text-[8px] text-gray-600 mt-1 uppercase font-mono">${new Date(j.createdAt).toLocaleDateString()}</p>
+            `;
+            div.onclick = () => selectJournal(j);
+            journalList.appendChild(div);
+        });
+    }
+
+    function selectJournal(j) {
+        selectedJournalId = j.id;
+        journalTitle.value = j.title;
+        journalBody.value = j.content;
+        fetchJournals(); // refresh list to show active state
+    }
+
+    async function saveJournal() {
+        const title = journalTitle.value;
+        const content = journalBody.value;
+        await fetch('/api/journals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: selectedJournalId, title, content })
+        });
+        fetchJournals();
+    }
+
+    // --- SCHEDULE LOGIC ---
+
+    async function fetchSchedules() {
+        const resp = await fetch('/api/schedules');
+        const events = await resp.json();
+        renderSchedules(events);
+    }
+
+    function renderSchedules(events) {
+        const renderItem = (e) => `
+            <div class="flex items-start gap-3 p-3 border-l-2 border-neon/30 bg-white/5">
+                <div class="flex-1">
+                    <p class="text-[10px] font-bold uppercase truncate">${e.event}</p>
+                    <p class="text-[8px] text-gray-600 font-mono mt-1">${e.date} @ ${e.time}</p>
+                </div>
+                <button onclick="window.deleteSch(${e.id})" class="text-gray-800 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
+            </div>
+        `;
+        
+        const listHtml = events.length ? events.map(renderItem).join('') : '<p class="text-[8px] text-gray-700 italic">No events.</p>';
+        dashScheduleList.innerHTML = listHtml;
+        fullScheduleList.innerHTML = listHtml;
+        lucide.createIcons();
+    }
+
+    async function addSchedule() {
+        const event = schEvent.value;
+        const date = schDate.value;
+        const time = schTime.value;
+        if (!event || !date || !time) return;
+
+        await fetch('/api/schedules', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event, date, time })
+        });
+        schEvent.value = '';
+        fetchSchedules();
+    }
+
+    window.deleteSch = async (id) => {
+        await fetch('/api/schedules/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        fetchSchedules();
+    };
+
+    // --- WHITEBOARD LOGIC ---
+
+    function initWhiteboard() {
+        if (ctx) return;
+        ctx = wbCanvas.getContext('2d');
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        wbCanvas.addEventListener('mousedown', startDraw);
+        wbCanvas.addEventListener('mousemove', draw);
+        wbCanvas.addEventListener('mouseup', stopDraw);
+        wbCanvas.addEventListener('mouseleave', stopDraw);
+    }
+
+    function resizeCanvas() {
+        const rect = wbCanvas.parentElement.getBoundingClientRect();
+        wbCanvas.width = rect.width;
+        wbCanvas.height = rect.height;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function startDraw(e) {
+        isDrawing = true;
+        draw(e);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const rect = wbCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineWidth = wbMode === 'eraser' ? 20 : 2;
+        ctx.strokeStyle = wbMode === 'eraser' ? '#0a0b10' : '#39ff14';
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function stopDraw() {
+        isDrawing = false;
+        ctx.beginPath();
+    }
+
+    // --- DASHBOARD HELPERS ---
+
+    function transitionToDashboard() {
+        loginPhase.classList.remove('active');
+        loginPhase.classList.add('hidden');
+        
+        headerUsername.textContent = currentUser.username;
+        const avatarUrl = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
+        headerAvatar.src = avatarUrl;
+
+        setTimeout(() => {
+            dashboardPhase.classList.remove('hidden');
+            dashboardPhase.classList.add('active');
+            updateDashboardStats();
+            fetchSchedules();
+        }, 500);
+    }
+
+    async function updateDashboardStats() {
+        const todoResp = await fetch('/api/todos');
+        const todos = await todoResp.json();
+        todoCountDisplay.textContent = String(todos.filter(t => !t.completed).length).padStart(2, '0');
+
+        const journalResp = await fetch('/api/journals');
+        const journals = await journalResp.json();
+        journalCountDisplay.textContent = String(journals.length).padStart(2, '0');
+    }
+
+    function showError(el, msg) {
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('opacity-100');
+        setTimeout(() => el.classList.remove('opacity-100'), 3000);
+    }
+
+    function showRegisterModal() {
+        registerModal.classList.remove('hidden');
+        setTimeout(() => registerModal.classList.add('opacity-100'), 10);
+    }
+
+    function hideRegisterModal() {
+        registerModal.classList.remove('opacity-100');
+        setTimeout(() => registerModal.classList.add('hidden'), 300);
+    }
+
+    function updatePreviewAvatar(base64, username) {
+        if (base64) {
+            loginAvatarPreview.src = base64;
+        } else if (username) {
+            loginAvatarPreview.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`;
+        }
+        previewUsername.textContent = username || 'Guest_User';
+    }
+
+    // --- EVENT LISTENERS ---
+
+    loginBtn.addEventListener('click', handleLogin);
+    showRegisterBtn.addEventListener('click', showRegisterModal);
+    closeRegisterBtn.addEventListener('click', hideRegisterModal);
+    regSubmitBtn.addEventListener('click', handleRegister);
+    navLogout.addEventListener('click', handleLogout);
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+    });
+
+    addTodoBtn.addEventListener('click', addTodo);
+    todoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
+
+    addJournalBtn.addEventListener('click', () => {
+        selectedJournalId = null;
+        journalTitle.value = '';
+        journalBody.value = '';
+    });
+    saveJournalBtn.addEventListener('click', saveJournal);
+
+    addSchBtn.addEventListener('click', addSchedule);
+
+    wbPen.addEventListener('click', () => {
+        wbMode = 'pen';
+        wbPen.classList.add('active');
+        wbEraser.classList.remove('active');
+    });
+    wbEraser.addEventListener('click', () => {
+        wbMode = 'eraser';
+        wbEraser.classList.add('active');
+        wbPen.classList.remove('active');
+    });
+    wbClear.addEventListener('click', () => {
+        ctx.fillStyle = '#111'; // effectively clear to dark
+        ctx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+    });
+    wbSave.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `neural_sketch_${Date.now()}.png`;
+        link.href = wbCanvas.toDataURL();
+        link.click();
+    });
+
+    usernameInput.addEventListener('input', (e) => {
+        updatePreviewAvatar(null, e.target.value);
+    });
+
+    avatarUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                regAvatarPreview.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Close on overlay click
+    registerModal.addEventListener('click', (e) => {
+        if (e.target === registerModal) hideRegisterModal();
+    });
+});

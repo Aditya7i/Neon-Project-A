@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Silhouette Dashboard</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-dark text-white font-sans antialiased overflow-hidden">
+    <div id="app" class="h-screen w-screen flex items-center justify-center relative overflow-hidden bg-dark">
+        <!-- Background Glow -->
+        <div class="glow-sphere top-[-100px] left-[-100px] w-64 h-64 opacity-20"></div>
+        <div class="glow-sphere bottom-[-50px] right-[-50px] w-80 h-80 opacity-10"></div>
+
+        <!-- Login Phase -->
+        <div id="login-phase" class="phase active w-full flex flex-col items-center z-10 transition-all duration-500">
+            <div class="login-card glass-card flex overflow-hidden w-[800px] h-[400px]">
+                <!-- Left: Form -->
+                <div class="w-1/2 p-10 flex flex-col justify-center border-r border-white/5 relative">
+                    <div class="absolute top-4 left-4 text-[8px] text-neon/30 font-mono">CONNECTION_SECURE_AES_256</div>
+                    <h1 class="text-3xl font-bold mb-1 tracking-tighter text-glow-neon">NEURAL ACCESS</h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mb-10">Identity Verification Protocol</p>
+                    
+                    <div class="space-y-6">
+                        <div class="input-group">
+                            <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Access Identity</label>
+                            <input type="text" id="username" placeholder="Username..." class="input-field">
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Encrypted Sequence</label>
+                            <div class="flex items-center gap-3">
+                                <input type="password" id="password" placeholder="Password..." class="input-field flex-1">
+                                <button id="login-btn" class="bg-neon text-black p-3 hover:brightness-125 transition-all shadow-neon rounded-sm">
+                                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="error-msg" class="text-red-500 text-[10px] uppercase font-mono mt-4 h-4 opacity-0 transition-opacity">Invalid access credentials.</p>
+                </div>
+
+                <!-- Right: Profile Preview -->
+                <div class="w-1/2 flex flex-col items-center justify-center bg-black/40 p-10 relative">
+                    <div class="absolute top-4 right-4 text-[8px] text-gray-600 font-mono">NODE_7G_CALIBRATED</div>
+                    <div class="relative">
+                        <div class="w-[120px] h-[120px] rounded-full border-2 border-neon overflow-hidden shadow-neon bg-black/80">
+                            <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover grayscale brightness-75">
+                        </div>
+                        <div class="absolute -bottom-2 -left-2 bg-black border border-neon/30 px-2 py-0.5 rounded text-[8px] text-neon font-mono pulsing">ONLINE</div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <p id="preview-username" class="text-sm font-bold tracking-widest text-gray-400 uppercase">Guest_User</p>
+                        <p class="text-[8px] text-gray-600 uppercase mt-1">Status: Restricted Access</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <button id="show-register-btn" class="mt-8 text-[10px] text-gray-500 hover:text-neon uppercase tracking-[0.4em] transition-all font-mono opacity-80 hover:opacity-100 flex items-center gap-2">
+                <i data-lucide="plus-square" class="w-3 h-3"></i> Initialize New Neural Account
+            </button>
+        </div>
+
+        <!-- Main Dashboard Phase -->
+        <div id="dashboard-phase" class="phase w-full h-full flex flex-col hidden overflow-hidden">
+            <!-- Header -->
+            <header class="flex justify-between items-center px-8 py-6 shrink-0 border-b border-white/5 bg-black/40 backdrop-blur-md">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tighter text-glow-neon uppercase">System Core</h1>
+                    <p class="text-[8px] text-gray-500 uppercase tracking-[0.4em] mt-1">Node: #NF-7729-AX // Status: Healthy</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <p id="current-time" class="text-lg font-mono text-neon font-bold">00:00:00</p>
+                        <p id="current-date" class="text-[8px] text-gray-600 uppercase font-mono tracking-widest">May 15, 2026</p>
+                    </div>
+                    <div class="flex items-center gap-3 pl-6 border-l border-white/10">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-gray-300 uppercase tracking-widest" id="header-username">Agent</p>
+                            <p class="text-[8px] text-neon/50 uppercase font-mono">Prime Access</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm">
+                            <img id="header-avatar" src="" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <main id="main-content" class="flex-1 relative overflow-y-auto custom-scrollbar p-8">
+                
+                <!-- View: Overview (Default Dashboard) -->
+                <div id="view-overview" class="view active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Stats Grid -->
+                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Neural Buffer</h3>
+                        <div class="flex items-end justify-between">
+                            <span class="text-4xl font-mono text-neon">82<span class="text-sm ml-1">%</span></span>
+                            <div class="w-24 h-12 flex items-end gap-1 px-1">
+                                <div class="w-full bg-neon/30 h-1/2"></div>
+                                <div class="w-full bg-neon/30 h-3/4"></div>
+                                <div class="w-full bg-neon h-full shadow-neon"></div>
+                                <div class="w-full bg-neon/30 h-2/3"></div>
+                            </div>
+                        </div>
+                        <p class="text-[8px] text-gray-600 mt-4 uppercase">System integrity verified by SQLite</p>
+                    </div>
+                    
+                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Active Tasks</h3>
+                        <div class="flex items-center justify-between">
+                            <span id="todo-count-display" class="text-4xl font-mono text-white">00</span>
+                            <i data-lucide="check-circle" class="text-neon w-8 h-8 opacity-40"></i>
+                        </div>
+                        <p class="text-[8px] text-gray-600 mt-4 uppercase">Pending operations in neural queue</p>
+                    </div>
+
+                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Log Archive</h3>
+                        <div class="flex items-center justify-between">
+                            <span id="journal-count-display" class="text-4xl font-mono text-white">00</span>
+                            <i data-lucide="book" class="text-neon w-8 h-8 opacity-40"></i>
+                        </div>
+                        <p class="text-[8px] text-gray-600 mt-4 uppercase">Persistent entries committed to disk</p>
+                    </div>
+
+                    <!-- Large Grid Item: Activity -->
+                    <div class="lg:col-span-2 glass-card p-8 h-[300px] flex flex-col">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-[10px] text-neon uppercase tracking-[0.3em]">Network activity // pulse_data</h3>
+                            <span class="text-[8px] text-gray-600 font-mono">LATENCY: 14MS</span>
+                        </div>
+                        <div class="flex-1 flex items-end gap-3 px-4">
+                            <!-- Animated bars -->
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-20 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-24 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-16 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon h-28 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-22 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-10 shadow-neon"></div></div>
+                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-26 shadow-neon"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Schedules Card -->
+                    <div class="glass-card p-6 h-[300px] flex flex-col">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Upcoming Events</h3>
+                        <div id="dash-schedule-list" class="space-y-4 overflow-y-auto no-scrollbar">
+                            <p class="text-[10px] text-gray-700 italic">No events scheduled.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Journal -->
+                <div id="view-journal" class="view hidden h-full flex flex-col">
+                    <div class="flex gap-6 h-full overflow-hidden">
+                        <div class="w-64 shrink-0 flex flex-col gap-4">
+                            <button id="add-journal-btn" class="w-full bg-neon text-black font-bold py-3 uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-neon-sm flex items-center justify-center gap-2">
+                                <i data-lucide="plus" class="w-3 h-3"></i> New Entry
+                            </button>
+                            <div id="journal-list" class="flex-1 overflow-y-auto no-scrollbar space-y-2">
+                                <!-- Journal list items will be injected -->
+                            </div>
+                        </div>
+                        <div class="flex-1 glass-card flex flex-col">
+                            <div class="p-4 border-b border-white/5 flex gap-4">
+                                <input type="text" id="journal-title" placeholder="Entry Title..." class="bg-transparent border-none outline-none text-neon font-bold tracking-tighter text-xl flex-1 placeholder:text-gray-800">
+                                <button id="save-journal-btn" class="text-neon/50 hover:text-neon transition-colors"><i data-lucide="save"></i></button>
+                            </div>
+                            <textarea id="journal-body" class="flex-1 bg-transparent p-6 outline-none resize-none text-gray-400 font-mono text-sm leading-relaxed" placeholder="Start your log entry..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Todo -->
+                <div id="view-todo" class="view hidden max-w-2xl mx-auto w-full">
+                    <div class="glass-card p-8 mb-6">
+                        <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Neural Tasks</h2>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-8">Pending Operations Queue</p>
+                        
+                        <div class="flex gap-2 mb-8">
+                            <input type="text" id="todo-input" placeholder="Initiate new task..." class="input-field py-4">
+                            <button id="add-todo-btn" class="bg-neon text-black px-6 hover:brightness-125 transition-all shadow-neon rounded-sm">
+                                <i data-lucide="plus"></i>
+                            </button>
+                        </div>
+
+                        <div id="todo-list" class="space-y-3">
+                            <!-- TODO items will be injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Calendar -->
+                <div id="view-calendar" class="view hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                        <!-- Calendar Widget -->
+                        <div class="lg:col-span-3 glass-card p-8">
+                            <div class="flex justify-between items-center mb-8">
+                                <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter">Neural Calendar</h2>
+                                <div class="flex gap-2">
+                                    <button class="p-2 border border-white/10 hover:border-neon transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                                    <span class="px-4 py-2 font-mono text-sm uppercase self-center">May 2026</span>
+                                    <button class="p-2 border border-white/10 hover:border-neon transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <!-- Mock Grid -->
+                            <div class="grid grid-cols-7 gap-2">
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Sun</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Mon</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Tue</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Wed</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Thu</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Fri</div>
+                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Sat</div>
+                                <!-- Calendar days -->
+                                <div class="calendar-day opacity-20">26</div>
+                                <div class="calendar-day opacity-20">27</div>
+                                <div class="calendar-day opacity-20">28</div>
+                                <div class="calendar-day opacity-20">29</div>
+                                <div class="calendar-day opacity-20">30</div>
+                                <div class="calendar-day">1</div>
+                                <div class="calendar-day">2</div>
+                                <div class="calendar-day">3</div>
+                                <div class="calendar-day">4</div>
+                                <div class="calendar-day">5</div>
+                                <div class="calendar-day">6</div>
+                                <div class="calendar-day">7</div>
+                                <div class="calendar-day">8</div>
+                                <div class="calendar-day">9</div>
+                                <div class="calendar-day">10</div>
+                                <div class="calendar-day">11</div>
+                                <div class="calendar-day">12</div>
+                                <div class="calendar-day">13</div>
+                                <div class="calendar-day">14</div>
+                                <div class="calendar-day active border-neon/50 bg-neon/10">15</div>
+                                <div class="calendar-day">16</div>
+                                <div class="calendar-day">17</div>
+                                <div class="calendar-day">18</div>
+                                <div class="calendar-day">19</div>
+                                <div class="calendar-day">20</div>
+                                <div class="calendar-day">21</div>
+                                <div class="calendar-day">22</div>
+                                <div class="calendar-day">23</div>
+                                <div class="calendar-day">24</div>
+                                <div class="calendar-day">25</div>
+                                <div class="calendar-day">26</div>
+                                <div class="calendar-day">27</div>
+                                <div class="calendar-day">28</div>
+                                <div class="calendar-day">29</div>
+                                <div class="calendar-day">30</div>
+                                <div class="calendar-day">31</div>
+                            </div>
+                        </div>
+                        <!-- Schedule Side -->
+                        <div class="glass-card p-6 flex flex-col">
+                            <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Manage Schedule</h3>
+                            <div class="space-y-4 mb-6">
+                                <input type="text" id="sch-event" placeholder="Event Detail" class="input-field py-3 text-xs">
+                                <div class="flex gap-2">
+                                    <input type="date" id="sch-date" class="input-field py-3 text-xs w-1/2">
+                                    <input type="time" id="sch-time" class="input-field py-3 text-xs w-1/2">
+                                </div>
+                                <button id="add-sch-btn" class="w-full bg-white/5 border border-white/10 text-white font-bold py-3 uppercase text-[10px] tracking-widest hover:bg-neon hover:text-black transition-all">
+                                    Add to Calendar
+                                </button>
+                            </div>
+                            <div id="full-schedule-list" class="flex-1 space-y-3 overflow-y-auto no-scrollbar">
+                                <!-- Events list -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Whiteboard -->
+                <div id="view-whiteboard" class="view hidden h-full flex flex-col">
+                    <div class="flex gap-4 mb-4 items-center">
+                        <div class="flex p-1 bg-black/40 border border-white/10 rounded">
+                            <button id="wb-pen" class="wb-tool active" title="Pen"><i data-lucide="pen-tool" class="w-4 h-4"></i></button>
+                            <button id="wb-eraser" class="wb-tool" title="Eraser"><i data-lucide="eraser" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-[1px] h-4 bg-white/10 mx-2"></div>
+                        <button id="wb-clear" class="text-red-500/50 hover:text-red-500 transition-colors uppercase text-[10px] tracking-widest font-mono">Purge Frame</button>
+                        <div class="ml-auto flex items-center gap-4">
+                            <div class="text-[8px] text-gray-600 font-mono">RESOLUTION: 1080P_CANVAS</div>
+                            <button id="wb-save" class="bg-neon text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon-sm">Transmit PNG</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 glass-card overflow-hidden bg-black/60 relative">
+                        <!-- Grid lines for aesthetic -->
+                        <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: radial-gradient(circle, #39ff14 1px, transparent 1px); background-size: 30px 30px;"></div>
+                        <canvas id="whiteboard-canvas" class="w-full h-full cursor-crosshair relative z-10"></canvas>
+                    </div>
+                </div>
+
+                <!-- View: Analytics -->
+                <div id="view-analytics" class="view hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass-card p-8">
+                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Usage Pulse</h2>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Neural connection telemetry</p>
+                            
+                            <div class="aspect-video bg-black/40 rounded border border-white/5 relative flex items-center justify-center">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                                    <div class="w-[300px] h-[300px] border border-neon rounded-full animate-ping"></div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-6xl font-mono text-neon font-bold">99.9</div>
+                                    <div class="text-[10px] text-gray-500 uppercase mt-2">Downtime likelihood: ZERO</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card p-8 flex flex-col">
+                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">System Targets</h2>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Goal alignment protocol</p>
+                            
+                            <div class="space-y-8">
+                                <div>
+                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Neural Efficiency</span><span class="text-neon">85%</span></div>
+                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-[85%] shadow-neon"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Database Sync</span><span class="text-neon">100%</span></div>
+                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-full shadow-neon"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Memory Stability</span><span class="text-neon">42%</span></div>
+                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-[42%] shadow-neon"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Bottom Navigation -->
+            <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
+                <div class="glass-card px-8 py-3 flex items-center gap-10 border-white/10 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon/30 to-transparent"></div>
+                    
+                    <button class="nav-btn active" data-view="overview" title="Dashboard">
+                        <i data-lucide="layout-grid"></i>
+                        <span class="nav-label">Core</span>
+                    </button>
+                    <button class="nav-btn" data-view="journal" title="Journal">
+                        <i data-lucide="book"></i>
+                        <span class="nav-label">Log</span>
+                    </button>
+                    <button class="nav-btn" data-view="todo" title="Tasks">
+                        <i data-lucide="check-square"></i>
+                        <span class="nav-label">List</span>
+                    </button>
+                    <button class="nav-btn" data-view="calendar" title="Calendar">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-label">Time</span>
+                    </button>
+                    <button class="nav-btn" data-view="whiteboard" title="Whiteboard">
+                        <i data-lucide="brush"></i>
+                        <span class="nav-label">Sketch</span>
+                    </button>
+                    <button class="nav-btn" data-view="analytics" title="Analytics">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span class="nav-label">Data</span>
+                    </button>
+                    
+                    <div class="w-[1px] h-6 bg-white/10 mx-2"></div>
+                    
+                    <button id="nav-logout" class="nav-btn text-gray-500 hover:text-red-500 transition-colors" title="Exit System">
+                        <i data-lucide="log-out"></i>
+                        <span class="nav-label">Exit</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Registration Modal -->
+        <div id="register-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="glass-card max-w-md w-full p-10 border-neon/20 shadow-2xl">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">New Account</h2>
+                        <p class="text-[8px] text-gray-600 uppercase">Input unique sequence for registration</p>
+                    </div>
+                    <button id="close-register-btn" class="text-gray-500 hover:text-neon transition-colors"><i data-lucide="x"></i></button>
+                </div>
+
+                <div class="flex justify-center mb-10">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
+                        <div class="w-28 h-28 rounded-full border-2 border-neon/40 group-hover:border-neon overflow-hidden transition-all shadow-neon-sm">
+                            <img id="register-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=new_user" class="w-full h-full object-cover">
+                        </div>
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                            <i data-lucide="camera" class="text-neon w-8 h-8"></i>
+                        </div>
+                        <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="input-group">
+                        <input type="text" id="reg-username" placeholder="Desired Username" class="input-field py-3">
+                    </div>
+                    <div class="input-group">
+                        <input type="email" id="reg-email" placeholder="Email Address" class="input-field py-3">
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="reg-password" placeholder="Passphrase (Min 6)" class="input-field py-3">
+                    </div>
+                    <div id="reg-error" class="text-red-500 text-[9px] uppercase font-mono text-center h-4"></div>
+                    <button id="reg-submit-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-xs tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
+                        Initialize Enrollment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/app.js"></script>
+</body>
+</html>

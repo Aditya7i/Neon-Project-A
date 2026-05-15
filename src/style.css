@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@theme {
+    --color-dark: #0a0b10;
+    --color-neon: #39ff14;
+    --font-mono: "JetBrains Mono", monospace;
+    --animate-pulse-neon: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-neon {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px var(--color-neon)); }
+    50% { opacity: .7; filter: drop-shadow(0 0 20px var(--color-neon)); }
+}
+
+@layer base {
+    body {
+        @apply bg-dark text-gray-100 selection:bg-neon selection:text-black font-sans;
+    }
+}
+
+@layer components {
+    .glass-card {
+        @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl transition-all duration-300;
+    }
+
+    .glass-card-hover {
+        @apply hover:border-neon/30 hover:bg-white/[0.08];
+    }
+
+    .glow-sphere {
+        @apply absolute bg-neon opacity-5 blur-[120px] rounded-full pointer-events-none;
+    }
+
+    .silhouette-circle {
+        @apply relative w-64 h-64 rounded-full overflow-hidden border-2 border-neon bg-black shadow-[0_0_30px_rgba(57,255,20,0.4)];
+    }
+
+    .silhouette-circle::after {
+        content: '';
+        @apply absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent;
+    }
+
+    .nav-icon-container {
+        @apply bg-white/5 backdrop-blur-2xl border border-white/20 rounded-full px-6 py-3 flex gap-8 items-center shadow-2xl ring-1 ring-white/10;
+    }
+
+    .nav-icon {
+        @apply flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all outline-none;
+    }
+
+    .nav-icon.active {
+        @apply opacity-100;
+    }
+
+    .nav-indicator {
+        @apply w-8 h-1 rounded-full bg-neon shadow-[0_0_10px_rgba(57,255,20,0.8)] mb-1;
+    }
+
+    .nav-label {
+        @apply text-[10px] font-bold uppercase tracking-widest;
+    }
+
+    .phase {
+        @apply transition-all duration-500 ease-in-out transform;
+    }
+
+    .phase.hidden {
+        @apply opacity-0 pointer-events-none absolute translate-x-20;
+    }
+
+    .phase:not(.hidden) {
+        @apply opacity-100 translate-x-0;
+    }
+
+    .input-field {
+        @apply w-full bg-black/40 border-b border-gray-800 p-2 focus:border-neon outline-none transition-all placeholder:text-gray-600;
+    }
+
+    .text-glow-neon {
+         @apply text-neon drop-shadow-[0_0_8px_rgba(57,255,20,0.6)];
+    }
+
+    .shadow-neon {
+        @apply shadow-[0_0_20px_rgba(57,255,20,0.3)];
+    }
+
+    .shadow-neon-sm {
+        @apply shadow-[0_0_10px_rgba(57,255,20,0.2)];
+    }
+
+    .pulsing {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(57,255,20,0.5)); }
+        50% { opacity: 0.7; filter: drop-shadow(0 0 10px rgba(57,255,20,0.8)); }
+    }
+
+    .login-card {
+        @apply shadow-[0_20px_50px_rgba(0,0,0,0.5)];
+    }
+
+    /* Transition effects */
+    .phase {
+        @apply transition-all duration-500 ease-in-out;
+    }
+
+    .phase.hidden {
+        @apply opacity-0 scale-95 pointer-events-none;
+    }
+
+    .phase.active {
+        @apply opacity-100 scale-100;
+    }
+
+    /* New Dashboard Styles */
+    .nav-btn {
+        @apply flex flex-col items-center gap-1 opacity-30 hover:opacity-100 transition-all outline-none relative;
+    }
+
+    .nav-btn.active {
+        @apply opacity-100 text-neon;
+    }
+
+    .nav-btn i {
+        @apply w-5 h-5;
+    }
+
+    .nav-btn .nav-label {
+        @apply text-[8px] font-bold uppercase tracking-[0.2em] mt-1;
+    }
+
+    .view {
+        @apply transition-all duration-300;
+    }
+
+    .view.hidden {
+        @apply opacity-0 translate-y-4 pointer-events-none absolute;
+    }
+
+    .view:not(.hidden) {
+        @apply opacity-100 translate-y-0;
+    }
+
+    .calendar-day {
+        @apply aspect-square flex items-center justify-center border border-white/5 bg-white/[0.02] text-[10px] rounded-sm hover:border-neon/30 transition-all cursor-pointer;
+    }
+
+    .wb-tool {
+        @apply p-2 rounded text-gray-500 hover:text-neon hover:bg-white/5 transition-all;
+    }
+
+    .wb-tool.active {
+        @apply text-neon bg-neon/10 shadow-[0_0_10px_rgba(57,255,20,0.2)];
+    }
+
+    .journal-item {
+        @apply p-4 border border-white/5 rounded-lg hover:border-neon/20 hover:bg-white/[0.02] transition-all cursor-pointer;
+    }
+
+    .journal-item.active {
+        @apply border-neon/40 bg-neon/5;
+    }
+
+    .todo-item {
+        @apply flex items-center gap-3 p-3 border border-white/5 rounded-lg hover:border-white/10 transition-all;
+    }
+
+    .todo-item.completed {
+        @apply opacity-50;
+    }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #333;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neon);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
