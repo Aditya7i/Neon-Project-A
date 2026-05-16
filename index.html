@@ -13,6 +13,9 @@
         <div class="glow-sphere top-[-100px] left-[-100px] w-64 h-64 opacity-20"></div>
         <div class="glow-sphere bottom-[-50px] right-[-50px] w-80 h-80 opacity-10"></div>
 
+        <!-- Notification Container -->
+        <div id="notification-container" class="fixed top-8 right-8 z-[1000] flex flex-col items-end pointer-events-none"></div>
+
         <!-- Login Phase -->
         <div id="login-phase" class="phase active w-full flex flex-col items-center z-10 transition-all duration-500">
             <div class="login-card glass-card flex overflow-hidden w-[800px] h-[400px]">
@@ -75,17 +78,241 @@
                         <p id="current-time" class="text-lg font-mono text-neon font-bold">00:00:00</p>
                         <p id="current-date" class="text-[8px] text-gray-600 uppercase font-mono tracking-widest">May 15, 2026</p>
                     </div>
-                    <div class="flex items-center gap-3 pl-6 border-l border-white/10">
+                    <div class="flex items-center gap-3 pl-6 border-l border-white/10 relative cursor-pointer group" id="profile-trigger">
                         <div class="text-right">
                             <p class="text-sm font-bold text-gray-300 uppercase tracking-widest" id="header-username">Agent</p>
                             <p class="text-[8px] text-neon/50 uppercase font-mono">Prime Access</p>
                         </div>
-                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm">
+                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm active-glow transition-all">
                             <img id="header-avatar" src="" class="w-full h-full object-cover">
+                        </div>
+
+                        <!-- Profile Dropdown Menu -->
+                        <div id="profile-dropdown" class="absolute top-full right-0 mt-4 w-72 glass-card border border-white/10 shadow-2xl opacity-0 translate-y-2 pointer-events-none transition-all duration-300 z-50 overflow-hidden">
+                            <div class="p-6 border-b border-white/5 bg-black/40">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-full border border-neon shadow-neon-sm overflow-hidden">
+                                        <img id="dropdown-avatar" src="" class="w-full h-full object-cover">
+                                    </div>
+                                    <div>
+                                        <p id="dropdown-username" class="text-sm font-bold text-glow-neon uppercase tracking-widest">Aditya</p>
+                                        <p class="text-[8px] text-gray-500 uppercase font-mono">Session ID: #NF-7729</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-2 space-y-1">
+                                <button class="profile-menu-item" data-phase="account">
+                                    <i data-lucide="user" class="w-4 h-4 text-neon"></i>
+                                    <span>Account Settings</span>
+                                </button>
+                                <button class="profile-menu-item" data-phase="system">
+                                    <i data-lucide="settings" class="w-4 h-4 text-neon"></i>
+                                    <span>System Preferences</span>
+                                </button>
+                                <button class="profile-menu-item" data-phase="security">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-neon"></i>
+                                    <span>Security & Cores</span>
+                                </button>
+                                <div class="h-[1px] bg-white/5 my-2"></div>
+                                <button id="menu-lock-btn" class="profile-menu-item text-blue-400/80 hover:text-blue-400">
+                                    <i data-lucide="lock" class="w-4 h-4"></i>
+                                    <span>Lock Core</span>
+                                </button>
+                                <button id="menu-logout-btn" class="profile-menu-item text-red-500/80 hover:text-red-500">
+                                    <i data-lucide="power" class="w-4 h-4"></i>
+                                    <span>Terminate Session</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
+
+            <!-- Settings Modal (Overlay) -->
+            <div id="settings-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 hidden opacity-0 transition-opacity duration-300">
+                <div class="glass-card w-full max-w-4xl h-[600px] flex overflow-hidden border-neon/10">
+                    <!-- Sidebar -->
+                    <div class="w-64 border-r border-white/5 flex flex-col p-6 bg-black/40">
+                        <div class="mb-10">
+                            <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">Control Center</h2>
+                            <p class="text-[8px] text-gray-600 uppercase font-mono">Global System Overrides</p>
+                        </div>
+                        
+                        <nav class="flex-1 space-y-2">
+                            <button class="settings-nav-btn active" data-tab="account">
+                                <i data-lucide="user"></i> Account Identity
+                            </button>
+                            <button class="settings-nav-btn" data-tab="system">
+                                <i data-lucide="sliders"></i> System Tuning
+                            </button>
+                            <button class="settings-nav-btn" data-tab="security">
+                                <i data-lucide="shield"></i> Session Security
+                            </button>
+                        </nav>
+                        
+                        <button id="close-settings-btn" class="mt-auto border border-white/10 p-3 text-[10px] uppercase font-bold tracking-widest hover:bg-white/5 transition-all">Close Interface</button>
+                    </div>
+                    
+                    <!-- Content Area -->
+                    <div class="flex-1 p-10 overflow-y-auto custom-scrollbar">
+                        
+                        <!-- Account Settings Tab -->
+                        <div id="settings-account" class="settings-tab active space-y-10">
+                            <section>
+                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="user" class="w-4 h-4"></i> Identity Management
+                                </h3>
+                                <div class="grid grid-cols-2 gap-8 items-start">
+                                    <div class="space-y-6">
+                                        <div class="input-group">
+                                            <label class="block text-[8px] uppercase tracking-widest text-gray-500 mb-2">Neural Alias</label>
+                                            <input type="text" id="set-username" class="input-field" placeholder="New Username">
+                                        </div>
+                                        <div class="input-group">
+                                            <label class="block text-[8px] uppercase tracking-widest text-gray-500 mb-2">Primary Core Email (LOCKED)</label>
+                                            <div class="relative">
+                                                <input type="text" id="set-email" class="input-field opacity-40 cursor-not-allowed pr-10" readonly value="agent@neural.core">
+                                                <i data-lucide="lock" class="absolute right-2 top-2.5 w-4 h-4 text-gray-600"></i>
+                                            </div>
+                                        </div>
+                                        <button id="update-profile-btn" class="bg-neon text-black px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon">Update Profile</button>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-32 h-32 rounded-full border-2 border-neon/20 overflow-hidden mb-4 relative group cursor-pointer" onclick="document.getElementById('avatar-update-input').click()">
+                                            <img id="set-avatar-preview" src="" class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i data-lucide="upload" class="w-8 h-8 text-neon"></i>
+                                            </div>
+                                        </div>
+                                        <input type="file" id="avatar-update-input" class="hidden" accept="image/*">
+                                        <p class="text-[8px] text-gray-600 uppercase font-mono">Neural Signature (.PNG / .JPG)</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="key" class="w-4 h-4"></i> Passphrase Sequence
+                                </h3>
+                                <div class="max-w-md space-y-6">
+                                    <input type="password" id="set-old-pass" placeholder="Current Sequence" class="input-field">
+                                    <input type="password" id="set-new-pass" placeholder="New Sequence" class="input-field">
+                                    <button id="update-pass-btn" class="border border-neon/30 text-neon px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-neon/10 transition-all">Rotate Sequence</button>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- System Tuning Tab -->
+                        <div id="settings-system" class="settings-tab hidden space-y-10">
+                            <section>
+                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="bell" class="w-4 h-4"></i> Digital Notifications
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                        <div>
+                                            <p class="text-[10px] font-bold uppercase">System Alerts</p>
+                                            <p class="text-[8px] text-gray-600">Flash neon border on critical events</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neon/50 peer-checked:after:bg-neon"></div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                        <div>
+                                            <p class="text-[10px] font-bold uppercase">Audio Logs</p>
+                                            <p class="text-[8px] text-gray-600">Enable synth-feedback on interactions</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer">
+                                            <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neon/50 peer-checked:after:bg-neon"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="palette" class="w-4 h-4"></i> Neon Hue Tuning
+                                </h3>
+                                <div class="grid grid-cols-4 gap-4" id="theme-selector">
+                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-neon rounded-lg transition-all" data-theme="green">
+                                        <div class="w-full h-8 bg-[#39ff14] shadow-neon rounded-sm"></div>
+                                        <span class="text-[8px] uppercase font-bold text-[#39ff14]">Green Core</span>
+                                    </button>
+                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-blue-500/50 rounded-lg transition-all" data-theme="blue">
+                                        <div class="w-full h-8 bg-[#0088ff] rounded-sm"></div>
+                                        <span class="text-[8px] uppercase font-bold text-gray-600">Cyber Blue</span>
+                                    </button>
+                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-red-500/50 rounded-lg transition-all" data-theme="red">
+                                        <div class="w-full h-8 bg-[#ff4444] rounded-sm"></div>
+                                        <span class="text-[8px] uppercase font-bold text-gray-600">Neural Red</span>
+                                    </button>
+                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-purple-500/50 rounded-lg transition-all" data-theme="purple">
+                                        <div class="w-full h-8 bg-[#aa00ff] rounded-sm"></div>
+                                        <span class="text-[8px] uppercase font-bold text-gray-600">Void Purple</span>
+                                    </button>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Session Security Tab -->
+                        <div id="settings-security" class="settings-tab hidden space-y-10">
+                            <section>
+                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="activity" class="w-4 h-4"></i> Session Diagnostics
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                        <p class="text-[8px] text-gray-600 uppercase mb-1">Authenticated Node</p>
+                                        <p class="text-xs font-mono text-gray-300" id="diag-node">#NF-7729-AX</p>
+                                    </div>
+                                    <div class="p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                                        <p class="text-[8px] text-gray-600 uppercase mb-1">Last Sync Timestamp</p>
+                                        <p class="text-xs font-mono text-gray-300" id="diag-time">2026-05-15 14:22</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Danger Protocol
+                                </h3>
+                                <div class="p-6 bg-red-500/5 border border-red-500/20 rounded-lg">
+                                    <p class="text-[10px] font-bold text-red-400 uppercase mb-2">Flush Component Cache</p>
+                                    <p class="text-[9px] text-gray-500 mb-6 leading-relaxed">This operation will purge all temporary neural buffers and local storage cache. Current session credentials and global states will remain intact.</p>
+                                    <button id="flush-cache-btn" class="border border-red-500/30 text-red-500 px-6 py-2 text-[8px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-black transition-all">Execute Purge Protocol</button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lock Screen Overlay -->
+            <div id="lock-screen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[200] flex flex-col items-center justify-center p-6 hidden opacity-0 transition-opacity duration-500">
+                <div class="text-center space-y-12 max-w-sm w-full">
+                    <div class="relative inline-block">
+                        <div class="w-32 h-32 rounded-full border-2 border-neon shadow-[0_0_40px_rgba(57,255,20,0.4)] overflow-hidden mx-auto mb-6">
+                            <img id="lock-avatar" src="" class="w-full h-full object-cover">
+                        </div>
+                        <i data-lucide="lock" class="absolute -bottom-2 -right-2 bg-neon text-black p-2 rounded-full w-8 h-8 shadow-neon"></i>
+                    </div>
+                    
+                    <div>
+                        <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter mb-2" id="lock-username">AGENT ADITYA</h2>
+                        <p class="text-[8px] text-gray-600 uppercase tracking-[0.5em]">CORE_STATE: ENCRYPT_LOCK</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <input type="password" id="unlock-pass" placeholder="Input Unlock Sequence..." class="input-field text-center font-mono py-4 text-lg">
+                        <p id="unlock-error" class="text-red-500 text-[10px] uppercase h-4 opacity-0">Incorrect Sequence</p>
+                        <button id="unlock-btn" class="w-full bg-neon text-black font-bold py-4 text-xs uppercase tracking-widest hover:brightness-110 shadow-neon">Verify Core Access</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Dynamic Content Area -->
             <main id="main-content" class="flex-1 relative overflow-y-auto custom-scrollbar p-8">
@@ -336,8 +563,8 @@
 
             <!-- Bottom Navigation -->
             <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-                <div class="glass-card px-8 py-3 flex items-center gap-10 border-white/10 shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon/30 to-transparent"></div>
+                <div class="glass-card px-8 py-3 flex items-center gap-10 border-red-900/30 bg-[#4a0404]/60 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
                     
                     <button class="nav-btn active" data-view="overview" title="Dashboard">
                         <i data-lucide="layout-grid"></i>
@@ -408,7 +635,7 @@
                         <input type="password" id="reg-password" placeholder="Passphrase (Min 6)" class="input-field py-3">
                     </div>
                     <div id="reg-error" class="text-red-500 text-[9px] uppercase font-mono text-center h-4"></div>
-                    <button id="reg-submit-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-xs tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
+                    <button id="reg-submit-btn" class="w-full bg-neon text-black font-bold py-5 rounded-sm uppercase text-sm tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
                         Initialize Enrollment
                     </button>
                 </div>

@@ -2,10 +2,19 @@
 
 @theme {
     --color-dark: #0a0b10;
-    --color-neon: #39ff14;
+    --color-neon: var(--neon-accent, #39ff14);
     --font-mono: "JetBrains Mono", monospace;
     --animate-pulse-neon: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+:root {
+    --neon-accent: #39ff14;
+}
+
+[data-theme="blue"] { --neon-accent: #0088ff; }
+[data-theme="red"] { --neon-accent: #ff4444; }
+[data-theme="purple"] { --neon-accent: #aa00ff; }
+[data-theme="green"] { --neon-accent: #39ff14; }
 
 @keyframes pulse-neon {
     0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px var(--color-neon)); }
@@ -169,6 +178,43 @@
 
     .todo-item.completed {
         @apply opacity-50;
+    }
+
+    /* Profile & Settings Components */
+    .profile-menu-item {
+        @apply w-full flex items-center gap-3 p-3 text-[10px] uppercase font-bold tracking-widest text-gray-400 hover:text-neon hover:bg-white/[0.03] transition-all rounded-lg text-left;
+    }
+
+    .settings-nav-btn {
+        @apply w-full flex items-center gap-3 p-4 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500 hover:text-neon hover:bg-white/[0.03] transition-all rounded-xl text-left border border-transparent;
+    }
+
+    .settings-nav-btn.active {
+        @apply text-neon bg-neon/10 border-neon/20 shadow-[0_0_10px_rgba(57,255,20,0.2)];
+    }
+
+    .settings-nav-btn i {
+        @apply w-4 h-4;
+    }
+
+    .active-glow {
+        @apply group-hover:shadow-[0_0_20px_rgba(57,255,20,0.5)] group-hover:border-neon;
+    }
+
+    #profile-dropdown.show {
+        @apply opacity-100 translate-y-0 pointer-events-auto;
+    }
+
+    .settings-tab {
+        @apply transition-all duration-300;
+    }
+
+    .settings-tab.hidden {
+        @apply opacity-0 scale-95 pointer-events-none absolute;
+    }
+
+    .settings-tab:not(.hidden) {
+        @apply opacity-100 scale-100;
     }
 }
 

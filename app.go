@@ -195,6 +195,96 @@ func (a *App) DeleteSchedule(id int) bool {
 	return err == nil
 }
 
+// --- USER MANAGEMENT & SETTINGS ---
+
+func (a *App) UpdateUsername(newUsername string) bool {
+	if a.currentUser == nil {
+		return false
+	}
+	_, err := a.db.Exec("UPDATE users SET username = ? WHERE id = ?", newUsername, a.currentUser.ID)
+	if err == nil {
+		a.currentUser.Username = newUsername
+		return true
+	}
+	return false
+}
+
+func (a *App) UpdatePassword(currentPassword, newPassword string) (bool, string) {
+	if a.currentUser == nil {
+		return false, "User not authenticated"
+	}
+
+	var hashedPassword string
+	err := a.db.QueryRow("SELECT password FROM users WHERE id = ?", a.currentUser.ID).Scan(&hashedPassword)
+	if err != nil {
+		return false, "User not found"
+	}
+
+	// Verify current password
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(currentPassword))
+	if err != nil {
+		return false, "Current passphrase incorrect"
+	}
+
+	// Hash new password
+	newHashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return false, "Encoding error"
+	}
+
+	_, err = a.db.Exec("UPDATE users SET password = ? WHERE id = ?", string(newHashed), a.currentUser.ID)
+	if err != nil {
+		return false, "Database sync error"
+	}
+
+	return true, "Sequence updated"
+}
+
+func (a *App) VerifyPassword(password string) bool {
+	if a.currentUser == nil {
+		return false
+	}
+	var hashedPassword string
+	err := a.db.QueryRow("SELECT password FROM users WHERE id = ?", a.currentUser.ID).Scan(&hashedPassword)
+	if err != nil {
+		return false
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
+}
+
+func (a *App) GetAllUsers() []User {
+	rows, err := a.db.Query("SELECT id, username, email, avatar FROM users")
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		rows.Scan(&u.ID, &u.Username, &u.Email, &u.Avatar)
+		users = append(users, u)
+	}
+	return users
+}
+
+func (a *App) FlushCache() bool {
+	// Simple simulation of purging non-essential state
+	return true
+}
+
+func (a *App) GetSessionDiagnostics() map[string]interface{} {
+	if a.currentUser == nil {
+		return nil
+	}
+	return map[string]interface{}{
+		"nodeId":    "#NF-7729-AX",
+		"timestamp": "2026-05-16 13:16",
+		"status":    "SECURE",
+	}
+}
+
 // Register a new user
 func (a *App) Register(username, password, email, avatarBase64 string) (bool, string) {
 	// Validasi sederhana

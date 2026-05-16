@@ -87,6 +87,35 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  app.get("/api/users", (req, res) => {
+    // In a real app, we'd query SQLite here. For this demo, we'll return a mock list or proxy to the App if it was Wails.
+    // Since we are simulating Wails but running in Express/SQLite context, let's keep it simple.
+    res.json([{ id: 1, username: "Aditya", email: "aditya@core.ai", avatar: "" }]);
+  });
+
+  app.post("/api/user/update-username", (req, res) => {
+    const { username } = req.body;
+    res.json({ success: true, message: "Username updated" });
+  });
+
+  app.post("/api/user/update-password", (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    res.json({ success: true, message: "Sequence updated" });
+  });
+
+  app.post("/api/user/verify-password", (req, res) => {
+    const { password } = req.body;
+    res.json({ success: password === "password" }); // simple mock
+  });
+
+  app.post("/api/system/flush", (req, res) => {
+    res.json({ success: true });
+  });
+
+  app.get("/api/system/diagnostics", (req, res) => {
+    res.json({ nodeId: "#NF-7729-AX", timestamp: new Date().toISOString(), status: "SECURE" });
+  });
+
   app.get("/api/dashboard", (req, res) => {
     // ... existing data
     res.json({

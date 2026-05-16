@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - DASHBOARD
     const headerUsername = document.getElementById('header-username');
     const headerAvatar = document.getElementById('header-avatar');
+    const profileTrigger = document.getElementById('profile-trigger');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const dropdownAvatar = document.getElementById('dropdown-avatar');
+    const dropdownUsername = document.getElementById('dropdown-username');
+    const profileMenuItems = document.querySelectorAll('.profile-menu-item');
     const currentTime = document.getElementById('current-time');
     const currentDateEl = document.getElementById('current-date');
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -68,6 +73,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const wbClear = document.getElementById('wb-clear');
     const wbSave = document.getElementById('wb-save');
 
+    // DOM Elements - SETTINGS MODAL
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings-btn');
+    const settingsNavBtns = document.querySelectorAll('.settings-nav-btn');
+    const settingsTabs = document.querySelectorAll('.settings-tab');
+    
+    // Settings Fields
+    const setUsername = document.getElementById('set-username');
+    const setEmail = document.getElementById('set-email');
+    const setAvatarPreview = document.getElementById('set-avatar-preview');
+    const avatarUpdateInput = document.getElementById('avatar-update-input');
+    const updateProfileBtn = document.getElementById('update-profile-btn');
+    const setOldPass = document.getElementById('set-old-pass');
+    const setNewPass = document.getElementById('set-new-pass');
+    const updatePassBtn = document.getElementById('update-pass-btn');
+    const flushCacheBtn = document.getElementById('flush-cache-btn');
+    const diagNode = document.getElementById('diag-node');
+    const diagTime = document.getElementById('diag-time');
+
+    // DOM Elements - LOCK SCREEN
+    const lockScreen = document.getElementById('lock-screen');
+    const lockAvatar = document.getElementById('lock-avatar');
+    const lockUsername = document.getElementById('lock-username');
+    const unlockPass = document.getElementById('unlock-pass');
+    const unlockBtn = document.getElementById('unlock-btn');
+    const unlockError = document.getElementById('unlock-error');
+    const menuLockBtn = document.getElementById('menu-lock-btn');
+    const menuLogoutBtn = document.getElementById('menu-logout-btn');
+
     // State
     let currentUser = null;
     let selectedJournalId = null;
@@ -78,6 +112,209 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     checkSession();
     startTimeUpdate();
+
+    // --- INTERFACE TOGGLES ---
+
+    function toggleProfileDropdown(show) {
+        if (show === undefined) show = !profileDropdown.classList.contains('show');
+        if (show) profileDropdown.classList.add('show');
+        else profileDropdown.classList.remove('show');
+    }
+
+    function showSettingsModal(phase = 'account') {
+        settingsModal.classList.remove('hidden');
+        setTimeout(() => settingsModal.classList.add('opacity-100'), 10);
+        switchSettingsTab(phase);
+        populateSettings();
+    }
+
+    function hideSettingsModal() {
+        settingsModal.classList.remove('opacity-100');
+        setTimeout(() => settingsModal.classList.add('hidden'), 300);
+    }
+
+    function switchSettingsTab(tabName) {
+        settingsTabs.forEach(tab => tab.classList.add('hidden'));
+        const targetTab = document.getElementById(`settings-${tabName}`);
+        if (targetTab) targetTab.classList.remove('hidden');
+
+        settingsNavBtns.forEach(btn => {
+            if (btn.dataset.tab === tabName) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        if (tabName === 'security') fetchDiagnostics();
+    }
+
+    function populateSettings() {
+        if (!currentUser) return;
+        setUsername.value = currentUser.username;
+        setEmail.value = currentUser.email || 'agent@neural.core';
+        const avatarUrl = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
+        setAvatarPreview.src = avatarUrl;
+    }
+
+    async function fetchDiagnostics() {
+        try {
+            const resp = await fetch('/api/system/diagnostics');
+            const data = await resp.json();
+            diagNode.textContent = data.nodeId;
+            diagTime.textContent = new Date(data.timestamp).toLocaleString();
+        } catch (err) {
+            console.error('Diag sync failed');
+        }
+    }
+
+    // --- PROFILE ACTIONS ---
+
+    async function updateProfile() {
+        const username = setUsername.value;
+        const avatarBase64 = setAvatarPreview.src.startsWith('data:') ? setAvatarPreview.src : null;
+
+        if (!username) return alert('Alias required');
+
+        try {
+            const resp = await fetch('/api/user/update-username', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const result = await resp.json();
+            
+            if (result.success) {
+                currentUser.username = username;
+                if (avatarBase64) currentUser.avatar = avatarBase64;
+                refreshUI();
+                showNotification('Profile protocol updated');
+            }
+        } catch (err) {
+            showNotification('Update sync failed', 'error');
+        }
+    }
+
+    async function rotateSequence() {
+        const currentPassword = setOldPass.value;
+        const newPassword = setNewPass.value;
+
+        if (!currentPassword || !newPassword) return showNotification('All sequences required', 'error');
+
+        try {
+            const resp = await fetch('/api/user/update-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                showNotification('Sequence rotated successfully');
+                setOldPass.value = '';
+                setNewPass.value = '';
+            } else {
+                showNotification(result.message || 'Verification failed', 'error');
+            }
+        } catch (err) {
+            showNotification('Sync anomaly', 'error');
+        }
+    }
+
+    async function executePurge() {
+        if (!confirm('Execute local data purge?')) return;
+        try {
+            await fetch('/api/system/flush', { method: 'POST' });
+            showNotification('Buffer cleared. Refreshing core.');
+            setTimeout(() => location.reload(), 1000);
+        } catch (err) {
+            showNotification('Purge aborted', 'error');
+        }
+    }
+
+    // --- LOCK CORE LOGIC ---
+
+    function lockCore() {
+        toggleProfileDropdown(false);
+        const avatarUrl = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
+        lockAvatar.src = avatarUrl;
+        lockUsername.textContent = `AGENT ${currentUser.username.toUpperCase()}`;
+        
+        lockScreen.classList.remove('hidden');
+        setTimeout(() => lockScreen.classList.add('opacity-100'), 10);
+        unlockPass.value = '';
+        unlockPass.focus();
+    }
+
+    async function unlockCore() {
+        const password = unlockPass.value;
+        try {
+            const resp = await fetch('/api/user/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                lockScreen.classList.remove('opacity-100');
+                setTimeout(() => lockScreen.classList.add('hidden'), 500);
+            } else {
+                showError(unlockError, 'Sequence rejected');
+            }
+        } catch (err) {
+            showError(unlockError, 'Access circuit error');
+        }
+    }
+
+    // --- UI HELPERS ---
+
+    function showNotification(message, type = 'success') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
+        const notify = document.createElement('div');
+        notify.className = `glass-card px-6 py-3 border-l-2 mb-3 shadow-2xl translate-x-10 opacity-0 transition-all duration-300 pointer-events-auto flex items-center gap-3 ${
+            type === 'error' ? 'border-red-500 text-red-500 bg-red-500/5' : 'border-neon text-neon bg-neon/5'
+        }`;
+        
+        const icon = type === 'error' ? 'alert-circle' : 'check-circle';
+        notify.innerHTML = `
+            <i data-lucide="${icon}" class="w-4 h-4"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">${message}</span>
+        `;
+        
+        container.appendChild(notify);
+        lucide.createIcons();
+
+        // Animate in
+        setTimeout(() => {
+            notify.classList.remove('translate-x-10', 'opacity-0');
+            notify.classList.add('translate-x-0', 'opacity-100');
+        }, 10);
+
+        // Remove after 4s
+        setTimeout(() => {
+            notify.classList.add('translate-x-10', 'opacity-0');
+            setTimeout(() => notify.remove(), 300);
+        }, 4000);
+    }
+
+    // Suppress Vite WebSocket noise in preview
+    (function() {
+        const originalError = console.error;
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+               (args[0].includes('[vite] failed to connect to websocket') || 
+                args[0].includes('WebSocket closed without opened'))) {
+                return;
+            }
+            originalError.apply(console, args);
+        };
+    })();
+
+    function refreshUI() {
+        headerUsername.textContent = currentUser.username;
+        dropdownUsername.textContent = currentUser.username;
+        const avatarUrl = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
+        headerAvatar.src = avatarUrl;
+        dropdownAvatar.src = avatarUrl;
+    }
 
     // --- CLOCK ---
     function startTimeUpdate() {
@@ -149,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                alert('Account Initialized. Commencing sync...');
+                showNotification('Account Initialized. Commencing sync...');
                 regUsername.value = '';
                 regEmail.value = '';
                 regPassword.value = '';
@@ -405,9 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginPhase.classList.remove('active');
         loginPhase.classList.add('hidden');
         
-        headerUsername.textContent = currentUser.username;
-        const avatarUrl = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
-        headerAvatar.src = avatarUrl;
+        refreshUI();
 
         setTimeout(() => {
             dashboardPhase.classList.remove('hidden');
@@ -460,6 +695,71 @@ document.addEventListener('DOMContentLoaded', () => {
     closeRegisterBtn.addEventListener('click', hideRegisterModal);
     regSubmitBtn.addEventListener('click', handleRegister);
     navLogout.addEventListener('click', handleLogout);
+    menuLogoutBtn.addEventListener('click', handleLogout);
+    menuLockBtn.addEventListener('click', lockCore);
+    unlockBtn.addEventListener('click', unlockCore);
+    unlockPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') unlockCore(); });
+
+    profileTrigger.addEventListener('click', (e) => {
+        // Toggle only if we click the trigger info part, not the dropdown itself
+        if (e.target.closest('#profile-dropdown')) return;
+        
+        e.stopPropagation();
+        toggleProfileDropdown();
+    });
+
+    document.addEventListener('click', () => toggleProfileDropdown(false));
+
+    profileMenuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent bubbling to profileTrigger
+            const phase = item.dataset.phase;
+            if (phase) {
+                showSettingsModal(phase);
+                toggleProfileDropdown(false);
+            }
+        });
+    });
+
+    closeSettingsBtn.addEventListener('click', hideSettingsModal);
+    
+    settingsNavBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchSettingsTab(btn.dataset.tab));
+    });
+
+    updateProfileBtn.addEventListener('click', updateProfile);
+    updatePassBtn.addEventListener('click', rotateSequence);
+    flushCacheBtn.addEventListener('click', executePurge);
+
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            document.body.setAttribute('data-theme', theme);
+            
+            // Update button styles
+            document.querySelectorAll('.theme-btn').forEach(b => {
+                b.classList.remove('border-neon');
+                b.classList.add('border-transparent');
+                b.querySelector('span').classList.remove('text-neon');
+                b.querySelector('span').classList.add('text-gray-600');
+            });
+            btn.classList.add('border-neon');
+            btn.classList.remove('border-transparent');
+            btn.querySelector('span').classList.add('text-neon');
+            btn.querySelector('span').classList.remove('text-gray-600');
+        });
+    });
+
+    avatarUpdateInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setAvatarPreview.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => switchView(btn.dataset.view));
