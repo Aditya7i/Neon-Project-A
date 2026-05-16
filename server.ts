@@ -113,7 +113,17 @@ async function startServer() {
   });
 
   app.get("/api/system/diagnostics", (req, res) => {
-    res.json({ nodeId: "#NF-7729-AX", timestamp: new Date().toISOString(), status: "SECURE" });
+    res.json({ 
+        nodeId: "#NF-7729-AX", 
+        timestamp: new Date().toISOString(), 
+        status: "SECURE",
+        uptime: "148:12:05",
+        lastCommit: new Date(Date.now() - 3600000).toISOString()
+    });
+  });
+
+  app.post("/api/system/vacuum", (req, res) => {
+    res.json({ success: true, message: "Local database optimized (VACUUM)" });
   });
 
   app.get("/api/dashboard", (req, res) => {

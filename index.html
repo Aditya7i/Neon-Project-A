@@ -172,7 +172,7 @@
                                         <div class="input-group">
                                             <label class="block text-[8px] uppercase tracking-widest text-gray-500 mb-2">Primary Core Email (LOCKED)</label>
                                             <div class="relative">
-                                                <input type="text" id="set-email" class="input-field opacity-40 cursor-not-allowed pr-10" readonly value="agent@neural.core">
+                                                <input type="text" id="email-locked" class="input-field opacity-40 cursor-not-allowed pr-10" readonly value="agent@neural.core">
                                                 <i data-lucide="lock" class="absolute right-2 top-2.5 w-4 h-4 text-gray-600"></i>
                                             </div>
                                         </div>
@@ -563,7 +563,7 @@
 
             <!-- Bottom Navigation -->
             <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-                <div class="glass-card px-8 py-3 flex items-center gap-10 border-red-900/30 bg-[#4a0404]/60 shadow-2xl relative overflow-hidden">
+                <div id="bottom-bar" class="glass-card px-8 py-3 flex items-center gap-10 border-red-900/30 bg-[#4a0404]/60 shadow-2xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
                     
                     <button class="nav-btn active" data-view="overview" title="Dashboard">
@@ -635,7 +635,7 @@
                         <input type="password" id="reg-password" placeholder="Passphrase (Min 6)" class="input-field py-3">
                     </div>
                     <div id="reg-error" class="text-red-500 text-[9px] uppercase font-mono text-center h-4"></div>
-                    <button id="reg-submit-btn" class="w-full bg-neon text-black font-bold py-5 rounded-sm uppercase text-sm tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
+                    <button id="tombol-daftar" class="w-full bg-neon text-black font-bold py-5 rounded-sm uppercase text-sm tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
                         Initialize Enrollment
                     </button>
                 </div>

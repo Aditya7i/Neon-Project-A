@@ -10,25 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginPhase = document.getElementById('login-phase');
     const dashboardPhase = document.getElementById('dashboard-phase');
     const registerModal = document.getElementById('register-modal');
-
-    // DOM Elements - LOGIN
-    const loginBtn = document.getElementById('login-btn');
-    const showRegisterBtn = document.getElementById('show-register-btn');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
+    const loginEmail = document.getElementById('username');
+    const loginPassword = document.getElementById('password');
+    const loginSubmitBtn = document.getElementById('login-btn');
     const loginError = document.getElementById('error-msg');
-    const loginAvatarPreview = document.getElementById('login-avatar-preview');
+    const toggleRegBtn = document.getElementById('show-register-btn');
+    const regSubmitBtn = document.getElementById('tombol-daftar');
+    const closeRegisterBtn = document.getElementById('close-register-btn');
+    const avatarUpload = document.getElementById('avatar-upload');
+    const regAvatarPreview = document.getElementById('register-avatar-preview');
     const previewUsername = document.getElementById('preview-username');
+    const loginAvatarPreview = document.getElementById('login-avatar-preview');
 
-    // DOM Elements - REGISTER
     const regUsername = document.getElementById('reg-username');
     const regEmail = document.getElementById('reg-email');
     const regPassword = document.getElementById('reg-password');
     const regError = document.getElementById('reg-error');
-    const regSubmitBtn = document.getElementById('reg-submit-btn');
-    const avatarUpload = document.getElementById('avatar-upload');
-    const regAvatarPreview = document.getElementById('register-avatar-preview');
-    const closeRegisterBtn = document.getElementById('close-register-btn');
 
     // DOM Elements - DASHBOARD
     const headerUsername = document.getElementById('header-username');
@@ -81,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Settings Fields
     const setUsername = document.getElementById('set-username');
-    const setEmail = document.getElementById('set-email');
+    const setEmail = document.getElementById('email-locked');
     const setAvatarPreview = document.getElementById('set-avatar-preview');
     const avatarUpdateInput = document.getElementById('avatar-update-input');
     const updateProfileBtn = document.getElementById('update-profile-btn');
@@ -108,6 +105,78 @@ document.addEventListener('DOMContentLoaded', () => {
     let wbMode = 'pen';
     let isDrawing = false;
     let ctx = null;
+
+    // Mock Wails bindings for this web environment
+    window.go = {
+        main: {
+            App: {
+                CheckSession: async () => {
+                    const resp = await fetch('/api/current-user');
+                    const user = await resp.json();
+                    return { authenticated: !!(user && user.username), user };
+                },
+                Login: async (username, password) => {
+                    const resp = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    return await resp.json();
+                },
+                Register: async (username, email, password, avatarBase64) => {
+                    const resp = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email, password, avatarBase64 })
+                    });
+                    return await resp.json();
+                },
+                Logout: async () => {
+                    const resp = await fetch('/api/logout', { method: 'POST' });
+                    return await resp.json();
+                },
+                UpdateUsername: async (username) => {
+                    const resp = await fetch('/api/user/update-username', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+                    return await resp.json();
+                },
+                UpdatePassword: async (currentPassword, newPassword) => {
+                    const resp = await fetch('/api/user/update-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ currentPassword, newPassword })
+                    });
+                    return await resp.json();
+                },
+                VerifyPassword: async (password) => {
+                    const resp = await fetch('/api/user/verify-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+                    const data = await resp.json();
+                    return data.success;
+                },
+                FlushCache: async () => {
+                    const resp = await fetch('/api/system/flush', { method: 'POST' });
+                    return await resp.json();
+                },
+                GetDiagnostics: async () => {
+                    const resp = await fetch('/api/system/diagnostics');
+                    return await resp.json();
+                },
+                VacuumDB: async () => {
+                    const resp = await fetch('/api/system/vacuum', { method: 'POST' });
+                    return await resp.json();
+                }
+            }
+        }
+    };
+
+    const wails = window.go.main.App;
 
     // --- INITIALIZATION ---
     checkSession();
@@ -156,10 +225,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchDiagnostics() {
         try {
-            const resp = await fetch('/api/system/diagnostics');
-            const data = await resp.json();
+            const data = await wails.GetDiagnostics();
             diagNode.textContent = data.nodeId;
             diagTime.textContent = new Date(data.timestamp).toLocaleString();
+            
+            // Added value items - Diagnostics enrichment
+            const parent = diagNode.parentElement.parentElement;
+            let uptimeBox = parent.querySelector('.uptime-box');
+            if (!uptimeBox) {
+                uptimeBox = document.createElement('div');
+                uptimeBox.className = 'uptime-box col-span-2 p-4 bg-white/[0.02] border border-white/5 rounded-lg flex justify-between items-center mt-4';
+                parent.appendChild(uptimeBox);
+            }
+            uptimeBox.innerHTML = `
+                <span class='text-[8px] text-gray-600 uppercase'>Hardware Uptime</span>
+                <span class='text-xs font-mono text-neon'>${data.uptime || '148:12:05'}</span>
+            `;
         } catch (err) {
             console.error('Diag sync failed');
         }
@@ -169,21 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateProfile() {
         const username = setUsername.value;
-        const avatarBase64 = setAvatarPreview.src.startsWith('data:') ? setAvatarPreview.src : null;
-
-        if (!username) return alert('Alias required');
+        if (!username) return showNotification('Alias required', 'error');
 
         try {
-            const resp = await fetch('/api/user/update-username', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
-            });
-            const result = await resp.json();
-            
+            const result = await wails.UpdateUsername(username);
             if (result.success) {
                 currentUser.username = username;
-                if (avatarBase64) currentUser.avatar = avatarBase64;
                 refreshUI();
                 showNotification('Profile protocol updated');
             }
@@ -199,12 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentPassword || !newPassword) return showNotification('All sequences required', 'error');
 
         try {
-            const resp = await fetch('/api/user/update-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword, newPassword })
-            });
-            const result = await resp.json();
+            const result = await wails.UpdatePassword(currentPassword, newPassword);
             if (result.success) {
                 showNotification('Sequence rotated successfully');
                 setOldPass.value = '';
@@ -218,13 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function executePurge() {
-        if (!confirm('Execute local data purge?')) return;
+        if (!confirm('Execute local database vacuum?')) return;
         try {
-            await fetch('/api/system/flush', { method: 'POST' });
-            showNotification('Buffer cleared. Refreshing core.');
-            setTimeout(() => location.reload(), 1000);
+            const result = await wails.VacuumDB();
+            showNotification(result.message || 'Optimization complete');
+            setTimeout(() => location.reload(), 1500);
         } catch (err) {
-            showNotification('Purge aborted', 'error');
+            showNotification('Vacuum protocol failed', 'error');
         }
     }
 
@@ -245,13 +312,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function unlockCore() {
         const password = unlockPass.value;
         try {
-            const resp = await fetch('/api/user/verify-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const result = await resp.json();
-            if (result.success) {
+            const authenticated = await wails.VerifyPassword(password);
+            if (authenticated) {
                 lockScreen.classList.remove('opacity-100');
                 setTimeout(() => lockScreen.classList.add('hidden'), 500);
             } else {
@@ -329,10 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkSession() {
         try {
-            const resp = await fetch('/api/current-user');
-            const user = await resp.json();
-            if (user && user.username) {
-                currentUser = user;
+            const data = await wails.CheckSession();
+            if (data.authenticated) {
+                currentUser = data.user;
                 transitionToDashboard();
             }
         } catch (err) {
@@ -341,21 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleLogin() {
-        const username = usernameInput.value;
-        const password = passwordInput.value;
+        const username = loginEmail.value;
+        const password = loginPassword.value;
 
         if (!username || !password) {
             return showError(loginError, 'Please input credentials');
         }
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const result = await response.json();
-
+            const result = await wails.Login(username, password);
             if (result.success) {
                 currentUser = result.userData;
                 transitionToDashboard();
@@ -378,13 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password, avatarBase64 })
-            });
-            const result = await response.json();
-
+            const result = await wails.Register(username, email, password, avatarBase64);
             if (result.success) {
                 showNotification('Account Initialized. Commencing sync...');
                 regUsername.value = '';
@@ -393,8 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideRegisterModal();
                 
                 // Set login inputs for convenience
-                usernameInput.value = username;
-                passwordInput.value = password;
+                loginEmail.value = username;
+                loginPassword.value = password;
                 updatePreviewAvatar(avatarBase64, username);
             } else {
                 showError(regError, result.message);
@@ -406,15 +455,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleLogout() {
         try {
-            await fetch('/api/logout', { method: 'POST' });
+            await wails.Logout();
             currentUser = null;
-            dashboardPhase.classList.add('hidden');
-            setTimeout(() => {
-                loginPhase.classList.remove('hidden');
-                loginPhase.classList.add('active');
-            }, 500);
+            location.reload();
         } catch (err) {
-            console.error('Logout error');
+            location.reload();
         }
     }
 
@@ -690,8 +735,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
 
-    loginBtn.addEventListener('click', handleLogin);
-    showRegisterBtn.addEventListener('click', showRegisterModal);
+    loginSubmitBtn.addEventListener('click', handleLogin);
+    toggleRegBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showRegisterModal();
+    });
     closeRegisterBtn.addEventListener('click', hideRegisterModal);
     regSubmitBtn.addEventListener('click', handleRegister);
     navLogout.addEventListener('click', handleLogout);
@@ -701,11 +749,13 @@ document.addEventListener('DOMContentLoaded', () => {
     unlockPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') unlockCore(); });
 
     profileTrigger.addEventListener('click', (e) => {
-        // Toggle only if we click the trigger info part, not the dropdown itself
         if (e.target.closest('#profile-dropdown')) return;
-        
         e.stopPropagation();
         toggleProfileDropdown();
+    });
+
+    profileDropdown.addEventListener('click', (e) => {
+        e.stopPropagation(); // FIX: Prevent dropdown close when clicking inside
     });
 
     document.addEventListener('click', () => toggleProfileDropdown(false));
@@ -798,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
     });
 
-    usernameInput.addEventListener('input', (e) => {
+    loginEmail.addEventListener('input', (e) => {
         updatePreviewAvatar(null, e.target.value);
     });
 
