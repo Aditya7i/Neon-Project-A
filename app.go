@@ -61,6 +61,18 @@ func (a *App) initDB() {
 		user_id INTEGER,
 		content TEXT,
 		completed BOOLEAN DEFAULT 0,
+		completed_at TIMESTAMP,
+		FOREIGN KEY(user_id) REFERENCES users(id)
+	);
+	CREATE TABLE IF NOT EXISTS routines (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER,
+		content TEXT,
+		time TEXT,
+		start_date TEXT,
+		end_date TEXT,
+		color TEXT,
+		completed_dates TEXT,
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
 	CREATE TABLE IF NOT EXISTS journals (
@@ -68,6 +80,19 @@ func (a *App) initDB() {
 		user_id INTEGER,
 		title TEXT,
 		content TEXT,
+		font_size TEXT,
+		font_family TEXT,
+		spacing TEXT,
+		paragraph TEXT,
+		font_color TEXT,
+		paper_style TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(user_id) REFERENCES users(id)
+	);
+	CREATE TABLE IF NOT EXISTS sketches (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER,
+		data TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY(user_id) REFERENCES users(id)
 	);
@@ -117,7 +142,13 @@ func (a *App) AddTodo(content string) bool {
 }
 
 func (a *App) ToggleTodo(id int, completed bool) bool {
-	_, err := a.db.Exec("UPDATE todos SET completed = ? WHERE id = ?", completed, id)
+	var query string
+	if completed {
+		query = "UPDATE todos SET completed = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?"
+	} else {
+		query = "UPDATE todos SET completed = ?, completed_at = NULL WHERE id = ?"
+	}
+	_, err := a.db.Exec(query, completed, id)
 	return err == nil
 }
 
@@ -126,7 +157,133 @@ func (a *App) DeleteTodo(id int) bool {
 	return err == nil
 }
 
-// --- JOURNAL METHODS ---
+// --- ROUTINE METHODS ---
+
+func (a *App) GetRoutines() []map[string]interface{} {
+	if a.currentUser == nil {
+		return nil
+	}
+	rows, err := a.db.Query("SELECT id, content, time, start_date, end_date, color, completed_dates FROM routines WHERE user_id = ?", a.currentUser.ID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var result []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var content, time, start, end, color, completed string
+		rows.Scan(&id, &content, &time, &start, &end, &color, &completed)
+		result = append(result, map[string]interface{}{
+			"id": id, 
+			"content": content, 
+			"time": time, 
+			"startDate": start, 
+			"endDate": end, 
+			"color": color, 
+			"completedDates": completed,
+		})
+	}
+	return result
+}
+
+func (a *App) AddRoutine(content, time, start, end, color string) bool {
+	if a.currentUser == nil {
+		return false
+	}
+	_, err := a.db.Exec("INSERT INTO routines (user_id, content, time, start_date, end_date, color, completed_dates) VALUES (?, ?, ?, ?, ?, ?, '')", a.currentUser.ID, content, time, start, end, color)
+	return err == nil
+}
+
+func (a *App) ToggleRoutine(id int, date string) bool {
+	var completed string
+	err := a.db.QueryRow("SELECT completed_dates FROM routines WHERE id = ?", id).Scan(&completed)
+	if err != nil {
+		return false
+	}
+
+	// Simple logic to add/remove date from comma list
+	// This is just a placeholder for more robust logic
+	if completed == "" {
+		completed = date
+	} else {
+		completed += "," + date
+	}
+
+	_, err = a.db.Exec("UPDATE routines SET completed_dates = ? WHERE id = ?", completed, id)
+	return err == nil
+}
+
+func (a *App) DeleteRoutine(id int) bool {
+	_, err := a.db.Exec("DELETE FROM routines WHERE id = ?", id)
+	return err == nil
+}
+
+// --- SKETCH METHODS ---
+
+func (a *App) GetSketches() []map[string]interface{} {
+	if a.currentUser == nil {
+		return nil
+	}
+	rows, err := a.db.Query("SELECT id, data, created_at FROM sketches WHERE user_id = ? ORDER BY created_at DESC", a.currentUser.ID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var result []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var data, createdAt string
+		rows.Scan(&id, &data, &createdAt)
+		result = append(result, map[string]interface{}{"id": id, "data": data, "createdAt": createdAt})
+	}
+	return result
+}
+
+func (a *App) SaveSketch(data string) bool {
+	if a.currentUser == nil {
+		return false
+	}
+	_, err := a.db.Exec("INSERT INTO sketches (user_id, data) VALUES (?, ?)", a.currentUser.ID, data)
+	return err == nil
+}
+
+// --- JOURNAL ENHANCED ---
+
+func (a *App) SaveJournalDetailed(id int, title, content, fontSize, fontFamily, spacing, paragraph, fontColor, paperStyle string) bool {
+	if a.currentUser == nil {
+		return false
+	}
+	if id == 0 {
+		_, err := a.db.Exec(`INSERT INTO journals 
+			(user_id, title, content, font_size, font_family, spacing, paragraph, font_color, paper_style) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+			a.currentUser.ID, title, content, fontSize, fontFamily, spacing, paragraph, fontColor, paperStyle)
+		return err == nil
+	}
+	_, err := a.db.Exec(`UPDATE journals SET 
+		title = ?, content = ?, font_size = ?, font_family = ?, spacing = ?, paragraph = ?, font_color = ?, paper_style = ? 
+		WHERE id = ?`, 
+		title, content, fontSize, fontFamily, spacing, paragraph, fontColor, paperStyle, id)
+	return err == nil
+}
+
+func (a *App) GetJournal(id int) map[string]interface{} {
+	var j map[string]interface{}
+	row := a.db.QueryRow("SELECT id, title, content, font_size, font_family, spacing, paragraph, font_color, paper_style FROM journals WHERE id = ?", id)
+	var jid int
+	var title, content, fontSize, fontFamily, spacing, paragraph, fontColor, paperStyle string
+	err := row.Scan(&jid, &title, &content, &fontSize, &fontFamily, &spacing, &paragraph, &fontColor, &paperStyle)
+	if err != nil {
+		return nil
+	}
+	return map[string]interface{}{
+		"id": id, "title": title, "content": content, "fontSize": fontSize, 
+		"fontFamily": fontFamily, "spacing": spacing, "paragraph": paragraph, 
+		"fontColor": fontColor, "paperStyle": paperStyle,
+	}
+}
 
 func (a *App) GetJournals() []map[string]interface{} {
 	if a.currentUser == nil {
@@ -272,6 +429,75 @@ func (a *App) GetAllUsers() []User {
 func (a *App) FlushCache() bool {
 	// Simple simulation of purging non-essential state
 	return true
+}
+
+func (a *App) GetActivityStats() map[string]interface{} {
+	if a.currentUser == nil {
+		return nil
+	}
+	
+	// Count completed todos in the last 30 days
+	var count int
+	err := a.db.QueryRow("SELECT COUNT(*) FROM todos WHERE user_id = ? AND completed = 1 AND completed_at >= date('now', '-30 days')", a.currentUser.ID).Scan(&count)
+	if err != nil {
+		count = 0
+	}
+
+	// Get routine achievements
+	rows, err := a.db.Query("SELECT content, completed_dates FROM routines WHERE user_id = ?", a.currentUser.ID)
+	achievements := []map[string]interface{}{}
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var content, completed string
+			rows.Scan(&content, &completed)
+			// Simple count of dates
+			done := 0
+			if completed != "" {
+				done = len(append([]string{}, (func() []string {
+					res := []string{}
+					temp := ""
+					for _, c := range completed {
+						if c == ',' {
+							res = append(res, temp)
+							temp = ""
+						} else {
+							temp += string(c)
+						}
+					}
+					if temp != "" { res = append(res, temp) }
+					return res
+				})()...))
+			}
+			achievements = append(achievements, map[string]interface{}{
+				"name": content,
+				"score": done,
+			})
+		}
+	}
+
+	return map[string]interface{}{
+		"monthlyTasks": count,
+		"achievements": achievements,
+	}
+}
+
+func (a *App) LoginGuest() (bool, string, *User) {
+	user := &User{
+		ID:       999,
+		Username: "Guest",
+		Email:    "guest@local.core",
+		Avatar:   "",
+	}
+	a.currentUser = user
+	return true, "Logged in as Guest", user
+}
+func (a *App) VacuumDB() map[string]interface{} {
+	_, err := a.db.Exec("VACUUM")
+	if err != nil {
+		return map[string]interface{}{"success": false, "message": err.Error()}
+	}
+	return map[string]interface{}{"success": true, "message": "Local database optimized (VACUUM)"}
 }
 
 func (a *App) GetSessionDiagnostics() map[string]interface{} {

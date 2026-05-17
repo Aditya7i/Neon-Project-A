@@ -24,8 +24,8 @@ function createWindow() {
     win.loadURL('http://localhost:3000');
     win.webContents.openDevTools();
   } else {
-    // In production, we load the standard build output
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    // In production, we load the standard build output from the same directory (dist)
+    win.loadFile(path.join(__dirname, 'index.html'));
   }
 
   win.once('ready-to-show', () => {

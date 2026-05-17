@@ -22,7 +22,7 @@
                 <!-- Left: Form -->
                 <div class="w-1/2 p-10 flex flex-col justify-center border-r border-white/5 relative">
                     <div class="absolute top-4 left-4 text-[8px] text-neon/30 font-mono">CONNECTION_SECURE_AES_256</div>
-                    <h1 class="text-3xl font-bold mb-1 tracking-tighter text-glow-neon">NEURAL ACCESS</h1>
+                    <h1 class="text-3xl font-bold mb-1 tracking-tighter text-glow-neon">ACCOUNT ACCESS</h1>
                     <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mb-10">Identity Verification Protocol</p>
                     
                     <div class="space-y-6">
@@ -32,15 +32,19 @@
                         </div>
                         <div class="input-group">
                             <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Encrypted Sequence</label>
-                            <div class="flex items-center gap-3">
-                                <input type="password" id="password" placeholder="Password..." class="input-field flex-1">
-                                <button id="login-btn" class="bg-neon text-black p-3 hover:brightness-125 transition-all shadow-neon rounded-sm">
-                                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                                </button>
-                            </div>
+                            <input type="password" id="password" placeholder="Password..." class="input-field">
                         </div>
                     </div>
                     <p id="error-msg" class="text-red-500 text-[10px] uppercase font-mono mt-4 h-4 opacity-0 transition-opacity">Invalid access credentials.</p>
+                    
+                    <div class="flex gap-4 mt-6">
+                        <button id="login-btn" class="flex-1 bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-125 transition-all shadow-neon">
+                            Verify Identity
+                        </button>
+                        <button id="guest-login-btn" class="flex-1 bg-white/5 text-gray-400 font-bold py-4 rounded-sm uppercase text-[9px] tracking-widest hover:bg-white/10 border border-white/10 transition-all">
+                            Access as Guest
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Right: Profile Preview -->
@@ -61,14 +65,14 @@
 
             <!-- Footer Action -->
             <button id="show-register-btn" class="mt-8 text-[10px] text-gray-500 hover:text-neon uppercase tracking-[0.4em] transition-all font-mono opacity-80 hover:opacity-100 flex items-center gap-2">
-                <i data-lucide="plus-square" class="w-3 h-3"></i> Initialize New Neural Account
+                <i data-lucide="plus-square" class="w-3 h-3"></i> Initialize New Account
             </button>
         </div>
 
         <!-- Main Dashboard Phase -->
         <div id="dashboard-phase" class="phase w-full h-full flex flex-col hidden overflow-hidden">
             <!-- Header -->
-            <header class="flex justify-between items-center px-8 py-6 shrink-0 border-b border-white/5 bg-black/40 backdrop-blur-md">
+            <header class="flex justify-between items-center px-8 py-6 shrink-0 border-b border-white/5 bg-black/40 backdrop-blur-md z-50">
                 <div>
                     <h1 class="text-xl font-bold tracking-tighter text-glow-neon uppercase">System Core</h1>
                     <p class="text-[8px] text-gray-500 uppercase tracking-[0.4em] mt-1">Node: #NF-7729-AX // Status: Healthy</p>
@@ -78,21 +82,21 @@
                         <p id="current-time" class="text-lg font-mono text-neon font-bold">00:00:00</p>
                         <p id="current-date" class="text-[8px] text-gray-600 uppercase font-mono tracking-widest">May 15, 2026</p>
                     </div>
-                    <div class="flex items-center gap-3 pl-6 border-l border-white/10 relative cursor-pointer group" id="profile-trigger">
-                        <div class="text-right">
+                    <div class="flex items-center gap-3 pl-6 border-l border-white/10 relative cursor-pointer group z-[60]" id="profile-trigger">
+                        <div class="text-right pointer-events-none">
                             <p class="text-sm font-bold text-gray-300 uppercase tracking-widest" id="header-username">Agent</p>
                             <p class="text-[8px] text-neon/50 uppercase font-mono">Prime Access</p>
                         </div>
-                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm active-glow transition-all">
-                            <img id="header-avatar" src="" class="w-full h-full object-cover">
+                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm active-glow transition-all pointer-events-none">
+                            <img id="header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
                         </div>
 
                         <!-- Profile Dropdown Menu -->
-                        <div id="profile-dropdown" class="absolute top-full right-0 mt-4 w-72 glass-card border border-white/10 shadow-2xl opacity-0 translate-y-2 pointer-events-none transition-all duration-300 z-50 overflow-hidden">
+                        <div id="profile-dropdown" class="absolute top-[calc(100%+1rem)] right-0 w-72 glass-card border border-white/10 shadow-2xl opacity-0 translate-y-2 pointer-events-none transition-all duration-300 z-[70] overflow-hidden">
                             <div class="p-6 border-b border-white/5 bg-black/40">
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-full border border-neon shadow-neon-sm overflow-hidden">
-                                        <img id="dropdown-avatar" src="" class="w-full h-full object-cover">
+                                        <img id="dropdown-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
                                     </div>
                                     <div>
                                         <p id="dropdown-username" class="text-sm font-bold text-glow-neon uppercase tracking-widest">Aditya</p>
@@ -180,7 +184,7 @@
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <div class="w-32 h-32 rounded-full border-2 border-neon/20 overflow-hidden mb-4 relative group cursor-pointer" onclick="document.getElementById('avatar-update-input').click()">
-                                            <img id="set-avatar-preview" src="" class="w-full h-full object-cover">
+                                            <img id="set-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
                                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <i data-lucide="upload" class="w-8 h-8 text-neon"></i>
                                             </div>
@@ -296,7 +300,7 @@
                 <div class="text-center space-y-12 max-w-sm w-full">
                     <div class="relative inline-block">
                         <div class="w-32 h-32 rounded-full border-2 border-neon shadow-[0_0_40px_rgba(57,255,20,0.4)] overflow-hidden mx-auto mb-6">
-                            <img id="lock-avatar" src="" class="w-full h-full object-cover">
+                            <img id="lock-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
                         </div>
                         <i data-lucide="lock" class="absolute -bottom-2 -right-2 bg-neon text-black p-2 rounded-full w-8 h-8 shadow-neon"></i>
                     </div>
@@ -318,63 +322,60 @@
             <main id="main-content" class="flex-1 relative overflow-y-auto custom-scrollbar p-8">
                 
                 <!-- View: Overview (Default Dashboard) -->
-                <div id="view-overview" class="view active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Stats Grid -->
+                <div id="view-overview" class="view active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Activity Tracking -->
                     <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Neural Buffer</h3>
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Activity Tracking</h3>
                         <div class="flex items-end justify-between">
-                            <span class="text-4xl font-mono text-neon">82<span class="text-sm ml-1">%</span></span>
-                            <div class="w-24 h-12 flex items-end gap-1 px-1">
-                                <div class="w-full bg-neon/30 h-1/2"></div>
-                                <div class="w-full bg-neon/30 h-3/4"></div>
-                                <div class="w-full bg-neon h-full shadow-neon"></div>
-                                <div class="w-full bg-neon/30 h-2/3"></div>
-                            </div>
+                            <span id="stat-monthly-tasks" class="text-4xl font-mono text-white">0</span>
+                            <i data-lucide="activity" class="text-neon w-8 h-8 opacity-40"></i>
                         </div>
-                        <p class="text-[8px] text-gray-600 mt-4 uppercase">System integrity verified by SQLite</p>
+                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden mt-4">
+                            <div id="activity-bar" class="bg-neon h-full w-[0%] shadow-neon transition-all duration-1000"></div>
+                        </div>
+                        <p class="text-[8px] text-gray-600 mt-2 uppercase">Tasks completed in last 30 intervals</p>
+                    </div>
+
+                    <!-- Core Integrity -->
+                    <div class="glass-card p-6 flex flex-col justify-center items-center h-[180px]">
+                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">Core Integrity</h3>
+                        <div id="core-status" class="text-3xl font-bold text-neon tracking-widest animate-pulse">OPTIMAL</div>
+                        <p class="text-[8px] text-gray-600 mt-2 font-mono">NODE_HEALTH: SECURE</p>
+                    </div>
+
+                    <!-- Task Reminders (Routine) -->
+                    <div class="glass-card p-6 lg:col-span-2 flex flex-col h-[180px]">
+                        <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+                            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Task Reminder</h3>
+                            <div class="px-2 py-0.5 bg-neon/10 border border-neon/30 rounded text-[6px] font-bold text-neon uppercase tracking-widest">Routine Buffer</div>
+                        </div>
+                        <div id="reminder-container" class="space-y-2 flex-1 overflow-y-auto no-scrollbar">
+                            <p class="text-[8px] text-gray-700 italic">Scanning routine protocols...</p>
+                        </div>
+                    </div>
+
+                    <!-- Counters -->
+                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Active Objectives</h3>
+                        <div class="flex items-center justify-between">
+                            <span id="overview-todo-count" class="text-4xl font-mono text-white">00</span>
+                            <i data-lucide="target" class="text-neon w-6 h-6 opacity-30"></i>
+                        </div>
                     </div>
                     
                     <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Active Tasks</h3>
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Journal Nodes</h3>
                         <div class="flex items-center justify-between">
-                            <span id="todo-count-display" class="text-4xl font-mono text-white">00</span>
-                            <i data-lucide="check-circle" class="text-neon w-8 h-8 opacity-40"></i>
-                        </div>
-                        <p class="text-[8px] text-gray-600 mt-4 uppercase">Pending operations in neural queue</p>
-                    </div>
-
-                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Log Archive</h3>
-                        <div class="flex items-center justify-between">
-                            <span id="journal-count-display" class="text-4xl font-mono text-white">00</span>
-                            <i data-lucide="book" class="text-neon w-8 h-8 opacity-40"></i>
-                        </div>
-                        <p class="text-[8px] text-gray-600 mt-4 uppercase">Persistent entries committed to disk</p>
-                    </div>
-
-                    <!-- Large Grid Item: Activity -->
-                    <div class="lg:col-span-2 glass-card p-8 h-[300px] flex flex-col">
-                        <div class="flex justify-between items-center mb-8">
-                            <h3 class="text-[10px] text-neon uppercase tracking-[0.3em]">Network activity // pulse_data</h3>
-                            <span class="text-[8px] text-gray-600 font-mono">LATENCY: 14MS</span>
-                        </div>
-                        <div class="flex-1 flex items-end gap-3 px-4">
-                            <!-- Animated bars -->
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-20 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-24 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-16 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon h-28 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-22 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-10 shadow-neon"></div></div>
-                            <div class="flex-1 bg-neon/10 h-32 relative"><div class="absolute bottom-0 w-full bg-neon/40 h-26 shadow-neon"></div></div>
+                            <span id="overview-journal-count" class="text-4xl font-mono text-white">00</span>
+                            <i data-lucide="database" class="text-neon w-6 h-6 opacity-30"></i>
                         </div>
                     </div>
 
-                    <!-- Recent Schedules Card -->
-                    <div class="glass-card p-6 h-[300px] flex flex-col">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Upcoming Events</h3>
-                        <div id="dash-schedule-list" class="space-y-4 overflow-y-auto no-scrollbar">
-                            <p class="text-[10px] text-gray-700 italic">No events scheduled.</p>
+                    <!-- Upcoming Schedules (Existing feature but renamed logic later) -->
+                    <div class="lg:col-span-2 glass-card p-6 h-[180px] flex flex-col">
+                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Mission Events</h3>
+                        <div id="dash-schedule-list" class="space-y-3 overflow-y-auto no-scrollbar">
+                            <p class="text-[8px] text-gray-700 italic">No events scheduled.</p>
                         </div>
                     </div>
                 </div>
@@ -390,111 +391,148 @@
                                 <!-- Journal list items will be injected -->
                             </div>
                         </div>
-                        <div class="flex-1 glass-card flex flex-col">
-                            <div class="p-4 border-b border-white/5 flex gap-4">
-                                <input type="text" id="journal-title" placeholder="Entry Title..." class="bg-transparent border-none outline-none text-neon font-bold tracking-tighter text-xl flex-1 placeholder:text-gray-800">
-                                <button id="save-journal-btn" class="text-neon/50 hover:text-neon transition-colors"><i data-lucide="save"></i></button>
-                            </div>
-                            <textarea id="journal-body" class="flex-1 bg-transparent p-6 outline-none resize-none text-gray-400 font-mono text-sm leading-relaxed" placeholder="Start your log entry..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- View: Todo -->
-                <div id="view-todo" class="view hidden max-w-2xl mx-auto w-full">
-                    <div class="glass-card p-8 mb-6">
-                        <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Neural Tasks</h2>
-                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-8">Pending Operations Queue</p>
-                        
-                        <div class="flex gap-2 mb-8">
-                            <input type="text" id="todo-input" placeholder="Initiate new task..." class="input-field py-4">
-                            <button id="add-todo-btn" class="bg-neon text-black px-6 hover:brightness-125 transition-all shadow-neon rounded-sm">
-                                <i data-lucide="plus"></i>
-                            </button>
-                        </div>
-
-                        <div id="todo-list" class="space-y-3">
-                            <!-- TODO items will be injected -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- View: Calendar -->
-                <div id="view-calendar" class="view hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                        <!-- Calendar Widget -->
-                        <div class="lg:col-span-3 glass-card p-8">
-                            <div class="flex justify-between items-center mb-8">
-                                <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter">Neural Calendar</h2>
-                                <div class="flex gap-2">
-                                    <button class="p-2 border border-white/10 hover:border-neon transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                                    <span class="px-4 py-2 font-mono text-sm uppercase self-center">May 2026</span>
-                                    <button class="p-2 border border-white/10 hover:border-neon transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        <div class="flex-1 glass-card flex flex-col overflow-hidden relative" id="journal-editor-container">
+                            <!-- Paper Lines Layer -->
+                            <div id="paper-lines" class="absolute inset-0 pointer-events-none opacity-5 hidden" style="background-image: linear-gradient(#39ff14 1px, transparent 1px); background-size: 100% 2em;"></div>
+                            
+                            <!-- Toolbar -->
+                            <div class="p-3 border-b border-white/5 bg-black/40 flex flex-wrap gap-4 items-center z-10">
+                                <select id="jr-font-family" class="bg-black/60 border border-white/10 text-[10px] text-neon px-2 py-1 outline-none font-mono">
+                                    <option value="font-mono">JetBrains Mono</option>
+                                    <option value="font-sans">Inter UI</option>
+                                    <option value="font-serif">Playfair</option>
+                                </select>
+                                
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[8px] uppercase text-gray-600">Size</span>
+                                    <input type="number" id="jr-font-size" value="14" class="w-12 bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none">
                                 </div>
-                            </div>
-                            <!-- Mock Grid -->
-                            <div class="grid grid-cols-7 gap-2">
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Sun</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Mon</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Tue</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Wed</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Thu</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Fri</div>
-                                <div class="text-[10px] text-gray-600 uppercase text-center pb-2">Sat</div>
-                                <!-- Calendar days -->
-                                <div class="calendar-day opacity-20">26</div>
-                                <div class="calendar-day opacity-20">27</div>
-                                <div class="calendar-day opacity-20">28</div>
-                                <div class="calendar-day opacity-20">29</div>
-                                <div class="calendar-day opacity-20">30</div>
-                                <div class="calendar-day">1</div>
-                                <div class="calendar-day">2</div>
-                                <div class="calendar-day">3</div>
-                                <div class="calendar-day">4</div>
-                                <div class="calendar-day">5</div>
-                                <div class="calendar-day">6</div>
-                                <div class="calendar-day">7</div>
-                                <div class="calendar-day">8</div>
-                                <div class="calendar-day">9</div>
-                                <div class="calendar-day">10</div>
-                                <div class="calendar-day">11</div>
-                                <div class="calendar-day">12</div>
-                                <div class="calendar-day">13</div>
-                                <div class="calendar-day">14</div>
-                                <div class="calendar-day active border-neon/50 bg-neon/10">15</div>
-                                <div class="calendar-day">16</div>
-                                <div class="calendar-day">17</div>
-                                <div class="calendar-day">18</div>
-                                <div class="calendar-day">19</div>
-                                <div class="calendar-day">20</div>
-                                <div class="calendar-day">21</div>
-                                <div class="calendar-day">22</div>
-                                <div class="calendar-day">23</div>
-                                <div class="calendar-day">24</div>
-                                <div class="calendar-day">25</div>
-                                <div class="calendar-day">26</div>
-                                <div class="calendar-day">27</div>
-                                <div class="calendar-day">28</div>
-                                <div class="calendar-day">29</div>
-                                <div class="calendar-day">30</div>
-                                <div class="calendar-day">31</div>
-                            </div>
-                        </div>
-                        <!-- Schedule Side -->
-                        <div class="glass-card p-6 flex flex-col">
-                            <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Manage Schedule</h3>
-                            <div class="space-y-4 mb-6">
-                                <input type="text" id="sch-event" placeholder="Event Detail" class="input-field py-3 text-xs">
-                                <div class="flex gap-2">
-                                    <input type="date" id="sch-date" class="input-field py-3 text-xs w-1/2">
-                                    <input type="time" id="sch-time" class="input-field py-3 text-xs w-1/2">
+
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[8px] uppercase text-gray-600">Space</span>
+                                    <input type="number" id="jr-spacing" value="1.5" step="0.1" class="w-12 bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none">
                                 </div>
-                                <button id="add-sch-btn" class="w-full bg-white/5 border border-white/10 text-white font-bold py-3 uppercase text-[10px] tracking-widest hover:bg-neon hover:text-black transition-all">
-                                    Add to Calendar
+
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[8px] uppercase text-gray-600">Para</span>
+                                    <select id="jr-paragraph-align" class="bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none font-mono">
+                                        <option value="text-left">Left</option>
+                                        <option value="text-center">Center</option>
+                                        <option value="text-right">Right</option>
+                                        <option value="text-justify">Justify</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[8px] uppercase text-gray-600">Ink</span>
+                                    <input type="color" id="jr-font-color" value="#ffffff" class="w-6 h-6 border-none bg-transparent cursor-pointer">
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[8px] uppercase text-gray-600">Paper</span>
+                                    <input type="color" id="jr-paper-color" value="#000000" class="w-6 h-6 border-none bg-transparent cursor-pointer">
+                                </div>
+
+                                <button id="btn-toggle-lines" class="p-2 hover:bg-white/5 text-gray-500 hover:text-neon transition-colors" title="Toggle Paper Lines">
+                                    <i data-lucide="align-justify" class="w-4 h-4"></i>
                                 </button>
+
+                                <div class="ml-auto">
+                                    <button id="save-journal-btn" class="bg-neon/10 border border-neon/30 text-neon px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:bg-neon hover:text-black transition-all">
+                                        Save Log
+                                    </button>
+                                </div>
                             </div>
-                            <div id="full-schedule-list" class="flex-1 space-y-3 overflow-y-auto no-scrollbar">
-                                <!-- Events list -->
+
+                            <div class="p-8 flex-1 flex flex-col z-0">
+                                <input type="text" id="journal-title" placeholder="PROTOCOL TITLE..." class="bg-transparent border-none text-2xl font-bold text-white tracking-widest focus:ring-0 mb-6 placeholder-white/10 uppercase">
+                                <textarea id="journal-body" placeholder="Begin neutral data log..." class="flex-1 bg-transparent border-none text-gray-400 focus:ring-0 resize-none font-mono placeholder-white/5 leading-relaxed"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Todo (Objectives & Calendar) -->
+                <div id="view-todo" class="view hidden h-full flex flex-col">
+                    <div class="flex gap-8 h-full overflow-hidden">
+                        <!-- Left: Calendar (30%) -->
+                        <div class="w-[30%] shrink-0 flex flex-col gap-6">
+                            <div class="glass-card p-6 flex-1 flex flex-col">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 id="cal-month-title" class="text-[10px] font-bold text-neon uppercase tracking-tighter">May 2026</h3>
+                                    <div class="flex gap-2">
+                                        <button id="cal-prev" class="p-1 hover:text-neon transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                                        <button id="cal-next" class="p-1 hover:text-neon transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1 text-[8px] text-gray-600 font-bold uppercase text-center mb-4">
+                                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                                </div>
+                                <div id="calendar-grid" class="grid grid-cols-7 gap-1 flex-1">
+                                    <!-- Calendar days -->
+                                </div>
+                            </div>
+
+                            <!-- Mission events (Schedules) -->
+                            <div class="glass-card p-6 border-white/5">
+                                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Register Schedule Event</h3>
+                                <div class="space-y-4">
+                                    <input type="text" id="sch-event" placeholder="Major Event Name..." class="input-field text-xs py-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="date" id="sch-date" class="input-field text-xs py-3">
+                                        <input type="time" id="sch-time" class="input-field text-xs py-3">
+                                    </div>
+                                    <button id="add-sch-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-neon-sm">
+                                        Commence Event Protocol
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Tasks (70%) -->
+                        <div class="flex-1 flex flex-col gap-6">
+                            <div class="grid grid-cols-2 gap-6 h-full overflow-hidden">
+                                <!-- Objectives Section -->
+                                <div class="flex flex-col gap-4 overflow-hidden">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h2 class="text-xl font-bold text-white tracking-widest uppercase">Objectives</h2>
+                                            <p class="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-mono">Mission Status</p>
+                                        </div>
+                                        <div id="todo-count-display-main" class="text-2xl font-bold text-neon tracking-tighter">0</div>
+                                    </div>
+
+                                    <div class="flex-1 flex flex-col glass-card border-white/5 overflow-hidden font-mono">
+                                        <div class="p-4 border-b border-white/5 flex gap-2 bg-white/[0.02]">
+                                            <input type="text" id="todo-input-main" placeholder="Execute objective..." class="flex-1 bg-transparent border-b border-white/10 text-white focus:border-neon focus:ring-0 transition-all py-1 placeholder-white/20 font-mono text-xs">
+                                            <button id="add-todo-btn-main" class="bg-neon/10 border border-neon/30 text-neon px-4 uppercase text-[8px] font-bold tracking-widest hover:bg-neon hover:text-black transition-all">
+                                                Commit
+                                            </button>
+                                            <button id="open-routine-btn" class="bg-white/5 border border-white/10 text-white/50 px-3 uppercase text-[10px] font-bold tracking-widest hover:border-white transition-all" title="Create Routine">
+                                                <i data-lucide="rotate-cw" class="w-3 h-3"></i>
+                                            </button>
+                                        </div>
+                                        <div id="todo-list-main" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                            <!-- Tasks appear here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Full Schedule Table -->
+                                <div class="flex flex-col gap-4 overflow-hidden">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h2 class="text-xl font-bold text-white tracking-widest uppercase">Schedule</h2>
+                                            <p class="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-mono">Neural Sequence</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex-1 flex flex-col glass-card border-white/5 overflow-hidden">
+                                        <div id="full-schedule-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                            <!-- Schedules appear here -->
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -502,58 +540,105 @@
 
                 <!-- View: Whiteboard -->
                 <div id="view-whiteboard" class="view hidden h-full flex flex-col">
-                    <div class="flex gap-4 mb-4 items-center">
-                        <div class="flex p-1 bg-black/40 border border-white/10 rounded">
-                            <button id="wb-pen" class="wb-tool active" title="Pen"><i data-lucide="pen-tool" class="w-4 h-4"></i></button>
-                            <button id="wb-eraser" class="wb-tool" title="Eraser"><i data-lucide="eraser" class="w-4 h-4"></i></button>
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter">Neural Schematic</h2>
+                            <p class="text-[8px] text-gray-500 uppercase tracking-widest font-mono">Visual data projection // Phase 4</p>
                         </div>
-                        <div class="w-[1px] h-4 bg-white/10 mx-2"></div>
-                        <button id="wb-clear" class="text-red-500/50 hover:text-red-500 transition-colors uppercase text-[10px] tracking-widest font-mono">Purge Frame</button>
-                        <div class="ml-auto flex items-center gap-4">
-                            <div class="text-[8px] text-gray-600 font-mono">RESOLUTION: 1080P_CANVAS</div>
-                            <button id="wb-save" class="bg-neon text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon-sm">Transmit PNG</button>
+                        <div class="flex gap-2">
+                            <button id="wb-undo" class="p-2 bg-white/5 border border-white/10 rounded hover:text-neon transition-all" title="Undo"><i data-lucide="undo" class="w-4 h-4"></i></button>
+                            <button id="wb-redo" class="p-2 bg-white/5 border border-white/10 rounded hover:text-neon transition-all" title="Redo"><i data-lucide="redo" class="w-4 h-4"></i></button>
+                            <div class="w-[1px] h-4 bg-white/10 mx-2"></div>
+                            <button id="wb-save" class="bg-neon text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon">Transmit PNG</button>
+                            <button id="wb-clear" class="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Flush Buffer</button>
                         </div>
                     </div>
-                    <div class="flex-1 glass-card overflow-hidden bg-black/60 relative">
-                        <!-- Grid lines for aesthetic -->
-                        <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: radial-gradient(circle, #39ff14 1px, transparent 1px); background-size: 30px 30px;"></div>
-                        <canvas id="whiteboard-canvas" class="w-full h-full cursor-crosshair relative z-10"></canvas>
-                    </div>
-                </div>
-
-                <!-- View: Analytics -->
-                <div id="view-analytics" class="view hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="glass-card p-8">
-                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Usage Pulse</h2>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Neural connection telemetry</p>
-                            
-                            <div class="aspect-video bg-black/40 rounded border border-white/5 relative flex items-center justify-center">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-10">
-                                    <div class="w-[300px] h-[300px] border border-neon rounded-full animate-ping"></div>
+                    
+                    <div class="flex gap-6 flex-1 min-h-0">
+                        <!-- Sketch Toolbar -->
+                        <div class="w-64 glass-card p-4 flex flex-col space-y-6">
+                            <div>
+                                <h4 class="text-[8px] uppercase text-gray-500 mb-3 tracking-widest font-bold">Brush Dynamics</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button id="tool-pen" class="tool-btn active p-3 bg-neon/20 border border-neon/50 text-neon rounded-lg flex flex-col items-center gap-1 transition-all">
+                                        <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                                        <span class="text-[8px]">Brush</span>
+                                    </button>
+                                    <button id="tool-bucket" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
+                                        <i data-lucide="paint-bucket" class="w-4 h-4"></i>
+                                        <span class="text-[8px]">Bucket</span>
+                                    </button>
+                                    <button id="tool-eraser" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
+                                        <i data-lucide="eraser" class="w-4 h-4"></i>
+                                        <span class="text-[8px]">Eraser</span>
+                                    </button>
+                                    <button id="tool-line" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
+                                        <i data-lucide="minus" class="w-4 h-4"></i>
+                                        <span class="text-[8px]">Line</span>
+                                    </button>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-6xl font-mono text-neon font-bold">99.9</div>
-                                    <div class="text-[10px] text-gray-500 uppercase mt-2">Downtime likelihood: ZERO</div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-[8px] uppercase text-gray-500 mb-3 tracking-widest font-bold">Rulers</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button id="ruler-none" class="ruler-btn active p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Free</button>
+                                    <button id="ruler-sym-4" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 4</button>
+                                    <button id="ruler-sym-8" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 8</button>
+                                    <button id="ruler-sym-12" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 12</button>
+                                    <button id="ruler-oval" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Oval</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center text-[8px] uppercase text-gray-600">
+                                        <span>Stroke Size</span>
+                                        <span id="brush-size-label">5px</span>
+                                    </div>
+                                    <input type="range" id="wb-brush-size" min="1" max="50" value="5" class="w-full accent-neon cursor-pointer">
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="text-[8px] text-gray-600 uppercase">Ink Color</div>
+                                    <input type="color" id="wb-brush-color" value="#39ff14" class="w-full h-10 border-none bg-transparent cursor-pointer rounded-lg overflow-hidden">
                                 </div>
                             </div>
                         </div>
-                        <div class="glass-card p-8 flex flex-col">
-                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">System Targets</h2>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Goal alignment protocol</p>
+
+                        <div class="flex-1 bg-white border-2 border-neon rounded-xl relative shadow-neon-sm overflow-hidden">
+                            <canvas id="whiteboard-canvas" class="w-full h-full cursor-crosshair"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Data (Analytics) -->
+                <div id="view-data" class="view hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass-card p-8">
+                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Daily Schedule Suggestions</h2>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Neural efficiency optimization</p>
                             
-                            <div class="space-y-8">
-                                <div>
-                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Neural Efficiency</span><span class="text-neon">85%</span></div>
-                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-[85%] shadow-neon"></div></div>
+                            <div id="suggestion-container" class="space-y-6">
+                                <div class="p-6 bg-white/[0.02] border border-white/5 rounded-xl group hover:border-neon/20 transition-all">
+                                    <h4 class="text-[10px] font-bold text-neon uppercase mb-2">Morning Synchronization (08:00)</h4>
+                                    <p class="text-[9px] text-gray-400 leading-relaxed uppercase">Prioritize routine protocols and mission alignment. Execute core system diagnostics before opening external links.</p>
                                 </div>
-                                <div>
-                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Database Sync</span><span class="text-neon">100%</span></div>
-                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-full shadow-neon"></div></div>
+                                <div class="p-6 bg-white/[0.02] border border-white/5 rounded-xl group hover:border-neon/20 transition-all">
+                                    <h4 class="text-[10px] font-bold text-white uppercase mb-2">Deep Work Cycle (10:00 - 13:00)</h4>
+                                    <p class="text-[9px] text-gray-500 leading-relaxed uppercase">Focus on high-complexity Data Logs and neural schematics. Minimize buffer interruptions for maximum throughput.</p>
                                 </div>
-                                <div>
-                                    <div class="flex justify-between text-[10px] uppercase font-mono mb-2"><span>Memory Stability</span><span class="text-neon">42%</span></div>
-                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div class="bg-neon h-full w-[42%] shadow-neon"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-8 flex flex-col">
+                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Routine Achievements</h2>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Objective accomplishment metrics</p>
+                            
+                            <div id="achievement-container" class="space-y-8 flex-1 overflow-y-auto custom-scrollbar pr-4">
+                                <!-- Achievement items will be injected -->
+                                <div class="text-center py-20 opacity-20">
+                                    <i data-lucide="award" class="w-12 h-12 mx-auto mb-4"></i>
+                                    <p class="text-[10px] uppercase">No routine achievements stored</p>
                                 </div>
                             </div>
                         </div>
@@ -570,32 +655,21 @@
                         <i data-lucide="layout-grid"></i>
                         <span class="nav-label">Core</span>
                     </button>
-                    <button class="nav-btn" data-view="journal" title="Journal">
-                        <i data-lucide="book"></i>
-                        <span class="nav-label">Log</span>
-                    </button>
-                    <button class="nav-btn" data-view="todo" title="Tasks">
+                    <button class="nav-btn" data-view="todo" title="Objectives">
                         <i data-lucide="check-square"></i>
-                        <span class="nav-label">List</span>
+                        <span class="nav-label">Todo</span>
                     </button>
-                    <button class="nav-btn" data-view="calendar" title="Calendar">
-                        <i data-lucide="calendar"></i>
-                        <span class="nav-label">Time</span>
+                    <button class="nav-btn" data-view="journal" title="Data Log">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-label">Logs</span>
                     </button>
-                    <button class="nav-btn" data-view="whiteboard" title="Whiteboard">
+                    <button class="nav-btn" data-view="whiteboard" title="Sketch">
                         <i data-lucide="brush"></i>
-                        <span class="nav-label">Sketch</span>
+                        <span class="nav-label">Draw</span>
                     </button>
-                    <button class="nav-btn" data-view="analytics" title="Analytics">
-                        <i data-lucide="bar-chart-3"></i>
+                    <button class="nav-btn" data-view="data" title="Analysis">
+                        <i data-lucide="database"></i>
                         <span class="nav-label">Data</span>
-                    </button>
-                    
-                    <div class="w-[1px] h-6 bg-white/10 mx-2"></div>
-                    
-                    <button id="nav-logout" class="nav-btn text-gray-500 hover:text-red-500 transition-colors" title="Exit System">
-                        <i data-lucide="log-out"></i>
-                        <span class="nav-label">Exit</span>
                     </button>
                 </div>
             </nav>
@@ -635,13 +709,54 @@
                         <input type="password" id="reg-password" placeholder="Passphrase (Min 6)" class="input-field py-3">
                     </div>
                     <div id="reg-error" class="text-red-500 text-[9px] uppercase font-mono text-center h-4"></div>
-                    <button id="tombol-daftar" class="w-full bg-neon text-black font-bold py-5 rounded-sm uppercase text-sm tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
+                    <button id="tombol-daftar" class="w-full bg-neon text-black font-bold py-6 rounded-sm uppercase text-lg tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
                         Initialize Enrollment
                     </button>
                 </div>
             </div>
         </div>
     </div>
+        <!-- Routine Modal -->
+        <div id="routine-modal" class="modal hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div class="glass-card w-full max-w-sm p-8 border-neon/30">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">Initialize Routine</h2>
+                    <button class="close-routine-modal text-gray-500 hover:text-white transition-colors" onclick="document.getElementById('routine-modal').classList.add('hidden')">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="input-group">
+                        <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Protocol Identifier</label>
+                        <input type="text" id="modal-routine-content" placeholder="Routine Activity Name..." class="input-field">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Execution Time</label>
+                            <input type="time" id="modal-routine-time" class="input-field">
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Color Marker</label>
+                            <input type="color" id="modal-routine-color" value="#39ff14" class="w-full h-11 bg-transparent border-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Termination Sequence (End Date)</label>
+                        <input type="date" id="modal-routine-end" class="input-field">
+                    </div>
+
+                    <p id="routine-error" class="text-red-500 text-[8px] uppercase font-mono h-2 opacity-0">Invalid parameters.</p>
+                    
+                    <button id="confirm-routine-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-125 transition-all shadow-neon">
+                        Commit Routine Protocol
+                    </button>
+                </div>
+            </div>
+        </div>
+
     <script type="module" src="/src/app.js"></script>
 </body>
 </html>
