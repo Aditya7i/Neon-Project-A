@@ -1,6 +1,6 @@
 {
-  "name": "Neon Silhouette Dashboard",
-  "description": "A deep dark themed dashboard with neon green accents, featuring complete SQLite authentication, profile management with avatars, and a central dashboard placeholder.",
+  "name": "Lumina Home - Premium Dashboard",
+  "description": "Advanced personal productivity dashboard with full-featured Journal editor, Routine task tracking with calendar, Whiteboard sketch pad with symmetry tools, and persistent local storage authentication.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

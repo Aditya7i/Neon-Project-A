@@ -50,7 +50,7 @@ async function startServer() {
   let schedules: any[] = [];
 
   app.post("/api/login/guest", (req, res) => {
-    const guestUser = { id: 999, username: "GUEST_ALPHA", email: "guest@local.core", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Guest", password: "guest" };
+    const guestUser = { id: 999, username: "GUEST_USER", email: "guest@lumina.home", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Guest", password: "guest" };
     if (!users.find(u => u.id === 999)) {
       users.push(guestUser);
     }
@@ -161,7 +161,7 @@ async function startServer() {
   app.get("/api/users", (req, res) => {
     // In a real app, we'd query SQLite here. For this demo, we'll return a mock list or proxy to the App if it was Wails.
     // Since we are simulating Wails but running in Express/SQLite context, let's keep it simple.
-    res.json([{ id: 1, username: "Aditya", email: "aditya@core.ai", avatar: "" }]);
+    res.json([{ id: 1, username: "Aditya", email: "aditya@lumina.home", avatar: "" }]);
   });
 
   app.post("/api/user/update-username", (req, res) => {
@@ -229,12 +229,12 @@ async function startServer() {
     // ... existing data
     res.json({
       schedules: [
-        { time: "08:00", event: "Sync with Terminal" },
-        { time: "10:30", event: "System Diagnostic" },
-        { time: "14:00", event: "Neural Link Calibration" },
+        { time: "08:00", event: "Persiapkan Hari" },
+        { time: "10:30", event: "Cek Rutinitas" },
+        { time: "14:00", event: "Waktu Istirahat & Kopi" },
       ],
       achievements: [
-        { title: "Overload Protocol", progress: 85 },
+        { title: "Rencana Sukses", progress: 85 },
       ]
     });
   });

@@ -1,5 +1,5 @@
 {
-  "name": "neon-silhouette-dashboard",
+  "name": "lumina-home-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -38,8 +38,9 @@
     "vite": "^6.2.3"
   },
   "build": {
-    "appId": "com.neon.silhouette",
-    "productName": "NeonSilhouette",
+    "appId": "com.lumina.home",
+    "productName": "LuminaHome",
+    "copyright": "Copyright © 2026 Lumina Home Systems",
     "directories": {
       "output": "release"
     },
@@ -47,7 +48,8 @@
       "dist/**/*"
     ],
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "icon": "public/favicon.ico"
     }
   }
 }

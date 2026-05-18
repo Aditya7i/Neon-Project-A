@@ -3,760 +3,1987 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Silhouette Dashboard</title>
-    <link rel="stylesheet" href="/src/style.css">
+    <title>Neon Silhouette - Premium Dashboard</title>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- CSS VARIABLES & THEMES --- */
+        :root {
+            --bg-color: #0c0d12;
+            --bg-gradient: radial-gradient(circle at top right, rgba(57, 255, 20, 0.15), transparent 60%), 
+                           radial-gradient(circle at bottom left, rgba(0, 255, 200, 0.1), transparent 60%);
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --neon-color: #39ff14;
+            --neon-glow: rgba(57, 255, 20, 0.5);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="blue"] { 
+            --neon-color: #00d2ff; 
+            --neon-glow: rgba(0, 210, 255, 0.5); 
+            --bg-gradient: radial-gradient(circle at top right, rgba(0, 210, 255, 0.18), transparent 60%), 
+                           radial-gradient(circle at bottom left, rgba(0, 80, 255, 0.12), transparent 60%);
+        }
+        [data-theme="red"] { 
+            --neon-color: #ff003c; 
+            --neon-glow: rgba(255, 0, 60, 0.5); 
+            --bg-gradient: radial-gradient(circle at top right, rgba(255, 69, 0, 0.18), transparent 60%), 
+                           radial-gradient(circle at bottom left, rgba(255, 0, 60, 0.12), transparent 60%);
+        }
+        [data-theme="purple"] { 
+            --neon-color: #bc13fe; 
+            --neon-glow: rgba(188, 19, 254, 0.5); 
+            --bg-gradient: radial-gradient(circle at top right, rgba(188, 19, 254, 0.18), transparent 60%), 
+                           radial-gradient(circle at bottom left, rgba(110, 0, 255, 0.12), transparent 60%);
+        }
+
+        /* --- BASE STYLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Performance/UI Toggles */
+        body.no-glow .neon-text { text-shadow: none !important; }
+        body.no-glow .neon-border { box-shadow: none !important; }
+        body.no-glow .btn-neon:hover { box-shadow: none !important; }
+        body.no-glow .sidebar-nav { box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        body.no-blur .glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(10, 25, 47, 0.9); }
+        body.no-blur .sidebar-nav { backdrop-filter: none !important; background: rgba(10, 25, 47, 0.95); }
+
+        button { cursor: pointer; border: none; outline: none; background: none; font-family: inherit; color: inherit; transition: var(--transition); }
+        input, textarea, select { background: none; border: none; outline: none; font-family: inherit; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- SHARED COMPONENTS --- */
+        .glass { 
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.15) 0%, rgba(10, 25, 47, 0.4) 100%);
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; 
+        }
+        .neon-text { 
+            color: var(--neon-color); 
+            text-shadow: 0 0 2px #fff, 0 0 10px var(--neon-color), 0 0 20px var(--neon-glow); 
+        }
+        .neon-border { 
+            border: 2px solid var(--neon-color) !important; 
+            box-shadow: 0 0 10px var(--neon-glow), inset 0 0 10px var(--neon-glow); 
+        }
+        i[data-lucide] { 
+            filter: drop-shadow(0 0 3px var(--neon-glow)); 
+            transition: var(--transition);
+        }
+        .active i[data-lucide], .neon-text i[data-lucide] {
+            filter: drop-shadow(0 0 5px var(--neon-color));
+        }
+        .btn-neon { 
+            background: var(--neon-color); 
+            color: #000; 
+            font-weight: 900; 
+            padding: 10px 24px; 
+            border-radius: 4px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-size: 11px;
+            box-shadow: 0 0 15px var(--neon-glow);
+            border: none;
+        }
+        .btn-neon:hover { 
+            filter: brightness(1.2); 
+            box-shadow: 0 0 20px var(--neon-color); 
+            transform: translateY(-2px);
+        }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 1px; }
+        .input-field { width: 100%; border-bottom: 1px solid var(--glass-border); padding: 8px 0; font-size: 14px; transition: var(--transition); }
+        .input-field:focus { border-bottom-color: var(--neon-color); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: var(--transition); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { width: 90%; max-width: 500px; padding: 30px; }
+
+        /* --- AUTH PHASE --- */
+        .auth-container { width: 100%; max-width: 400px; padding: 40px; text-align: center; }
+        .auth-avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--neon-color); margin: 0 auto 20px; overflow: hidden; background: #000; }
+        .auth-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .auth-tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); }
+        .auth-tab { flex: 1; padding: 15px; font-size: 14px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 1px; }
+        .auth-tab.active { color: var(--neon-color); border-bottom: 3px solid var(--neon-color); text-shadow: 0 0 10px var(--neon-glow); }
+
+        /* --- DASHBOARD LAYOUT --- */
+        #app-dashboard { display: none; width: 100vw; height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.5s; }
+        #app-dashboard.active { display: flex; opacity: 1; }
+
+        header { padding: 4px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); }
+        .header-profile { display: flex; align-items: center; gap: 12px; position: relative; cursor: pointer; }
+        .header-avatar { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--neon-color); }
+
+        .main-container { flex: 1; display: block; overflow: hidden; padding: 10px 0 0 0; }
+        
+        /* Navigation (Overlay & Auto-hide) */
+        .sidebar-nav { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translate(-50%, 150%); 
+            width: auto; 
+            min-width: 350px;
+            display: flex; 
+            flex-direction: row; 
+            justify-content: center;
+            gap: 10px; 
+            padding: 8px 15px;
+            background: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            z-index: 1000;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+        .sidebar-nav.visible { transform: translate(-50%, 0); }
+        .sidebar-nav::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+        }
+        .nav-item { 
+            flex: 1; 
+            height: 54px;
+            width: 70px;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 4px; 
+            color: var(--text-dim); 
+            border-radius: 18px; 
+            transition: var(--transition);
+            position: relative;
+        }
+        .nav-item i { width: 20px; height: 20px; }
+        .nav-item span { font-size: 8px; text-transform: uppercase; font-weight: bold; }
+        .nav-item.active { 
+            background: rgba(255, 165, 0, 0.2); 
+            color: #ffa500; 
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+        .nav-item.active::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            width: 4px;
+            height: 4px;
+            background: #ffa500;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ffa500;
+        }
+
+        /* Views */
+        .view-content { flex: 1; display: none; height: 100%; overflow-y: auto; padding-right: 10px; }
+        .view-content.active { display: block; }
+        .view-content::-webkit-scrollbar { width: 4px; }
+        .view-content::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+        /* Overview Grid */
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .stat-card { padding: 25px; display: flex; flex-direction: column; gap: 10px; min-height: 140px; }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; }
+        .stat-value { font-size: 28px; font-weight: bold; font-family: 'JetBrains Mono', monospace; }
+
+        /* Weekly Achievement Chart */
+        .chart-container { height: 100px; display: flex; align-items: flex-end; gap: 8px; padding-top: 10px; }
+        .chart-bar { flex: 1; background: var(--neon-color); border-radius: 4px 4px 0 0; min-height: 4px; transition: height 1s ease; opacity: 0.7; }
+        .chart-bar:hover { opacity: 1; filter: brightness(1.2); }
+
+        /* Journal */
+        .journal-container { display: flex; height: 100%; gap: 20px; }
+        .journal-sidebar { width: 250px; display: flex; flex-direction: column; gap: 10px; }
+        .journal-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .journal-item { padding: 12px; cursor: pointer; border-radius: 8px; border: 1px solid transparent; }
+        .journal-item:hover { background: rgba(255,255,255,0.03); }
+        .journal-item.active { border-color: var(--neon-color); background: var(--neon-glow); }
+        .journal-item h4 { font-size: 12px; margin-bottom: 4px; }
+        .journal-item p { font-size: 9px; color: var(--text-dim); }
+        
+        .journal-editor { flex: 1; display: flex; flex-direction: column; position: relative; }
+        .editor-toolbar { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--glass-border); }
+        .toolbar-group { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--glass-border); }
+        .toolbar-group label { font-size: 9px; color: var(--text-dim); }
+        .toolbar-group input, .toolbar-group select { font-size: 11px; }
+        .editor-content { flex: 1; padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+        #journal-body { 
+            flex: 1; width: 100%; min-height: 100%; resize: none; margin-top: 20px; 
+            border: none; outline: none; background: transparent; color: inherit;
+        }
+        .paper-lined { 
+            background-image: linear-gradient(#ffffff10 1px, transparent 1px);
+            background-size: 100% 1.6em;
+        }
+
+        /* Todo */
+        .todo-calendar-container { display: flex; gap: 20px; height: 100%; }
+        .calendar-section { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .todo-section { flex: 1; display: flex; flex-direction: column; }
+        .todo-input-box { display: flex; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); margin-bottom: 20px; }
+        .todo-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .todo-item { display: flex; align-items: center; gap: 12px; padding: 12px; }
+        .todo-checkbox { width: 18px; height: 18px; border: 1px solid var(--neon-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .todo-checkbox.checked { background: var(--neon-color); color: #000; }
+        .todo-text { flex: 1; font-size: 14px; }
+        .todo-item.completed .todo-text { text-decoration: line-through; opacity: 0.5; }
+
+        .calendar-section { width: 300px; }
+        .calendar-widget { padding: 20px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-day-label { font-size: 10px; color: var(--text-dim); padding-bottom: 5px; }
+        .cal-day { font-size: 11px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; }
+        .cal-day:hover { background: rgba(255,255,255,0.05); }
+        .cal-day.active { background: var(--neon-color); color: #000; }
+        .cal-day.has-event { border: 1px solid var(--neon-color); }
+
+        /* Whiteboard */
+        .wb-container { display: flex; gap: 20px; height: 100%; align-items: stretch; }
+        .wb-toolbar { width: 220px; padding: 20px; display: flex; flex-direction: column; gap: 15px; background-color: rgba(10, 25, 47, 0.4); backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); overflow-y: auto; }
+        .wb-header { padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; border-radius: 8px; width: 100%; }
+        .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .tool-btn { padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; border-radius: 8px; border: 1px solid var(--glass-border); }
+        .tool-btn i { width: 18px; height: 18px; }
+        .tool-btn span { font-size: 9px; text-transform: uppercase; font-weight: bold; }
+        .tool-btn.active { border-color: var(--neon-color); color: var(--neon-color); background: var(--neon-glow); }
+        
+        .wb-canvas-area { 
+            flex: 1;
+            background: #fff; 
+            border: 4px solid var(--neon-color); 
+            border-radius: 8px; 
+            overflow: auto; 
+            position: relative; 
+            box-shadow: 0 0 20px var(--neon-glow); 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        #wb-canvas { cursor: crosshair; image-rendering: pixelated; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 1000px; height: 1000px; min-width: 1000px; min-height: 1000px; }
+        
+        /* Music Player Refined */
+        .mp-container { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%; 
+            position: relative; 
+            overflow: hidden;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+        }
+        .mp-top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+        }
+        .mp-main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            padding: 30px;
+            position: relative;
+            gap: 20px;
+        }
+        
+        .mp-track-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .mp-album-art { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 12px; 
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            flex-shrink: 0;
+        }
+        .mp-album-art img { width: 100%; height: 100%; object-fit: cover; }
+        .mp-album-art i { width: 30px; height: 30px; color: var(--text-dim); opacity: 0.3; }
+
+        .mp-info { flex: 1; min-width: 0; }
+        .mp-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mp-artist { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+
+        .mp-controls-area {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            padding-bottom: 30px;
+            padding-left: 5px;
+        }
+
+        .mp-timeline-box { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .mp-timeline-wrapper { position: relative; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; cursor: pointer; }
+        .mp-progress-bar { position: absolute; height: 100%; background: var(--neon-color); border-radius: 2px; box-shadow: 0 0 10px var(--neon-glow); width: 0%; }
+        .mp-duration { display: flex; justify-content: space-between; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); opacity: 0.6; }
+
+        .mp-ctrl-btns { display: flex; align-items: center; gap: 30px; }
+        .mp-btn-main { 
+            width: 48px; 
+            height: 48px; 
+            border-radius: 50%; 
+            background: var(--neon-color);
+            border: none; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 0 15px var(--neon-glow);
+            color: #000;
+        }
+        .mp-btn-main:hover { transform: scale(1.1); box-shadow: 0 0 25px var(--neon-color); }
+        .mp-btn-small { color: var(--text-dim); transition: 0.2s; background: none; border: none; padding: 5px; cursor: pointer; }
+        .mp-btn-small:hover { color: var(--neon-color); transform: scale(1.1); }
+        .mp-btn-small.active { color: var(--neon-color); filter: drop-shadow(0 0 5px var(--neon-color)); }
+
+        .mp-playlist-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 360px;
+            height: 100%;
+            background: rgba(5, 10, 20, 0.7);
+            backdrop-filter: blur(40px);
+            border-left: 1px solid var(--glass-border);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -20px 0 50px rgba(0,0,0,0.8);
+        }
+        .mp-playlist-panel.active { transform: translateX(0); }
+        .mp-playlist-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
+        .mp-queue-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .mp-queue-item { 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .mp-queue-item:hover { background: rgba(255,255,255,0.05); }
+        .mp-queue-item.active { background: var(--neon-glow); border-color: var(--neon-color); }
+        .mp-queue-item.active .qi-title { color: var(--neon-color); }
+        .qi-info { flex: 1; min-width: 0; }
+        .qi-title { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .qi-artist { font-size: 9px; color: var(--text-dim); }
+
+        /* Lock Screen */
+        .lock-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 30px; text-align: center; opacity: 0; transition: opacity 0.5s; }
+        .lock-screen.active { display: flex; opacity: 1; }
+
+        /* Profile Dropdown */
+        .profile-dropdown { position: absolute; top: 100%; right: 0; margin-top: 15px; width: 240px; padding: 10px; z-index: 100; display: none; }
+        .profile-dropdown.active { display: block; }
+        .dropdown-item { width: 100%; padding: 12px; display: flex; align-items: center; gap: 10px; border-radius: 8px; text-align: left; }
+        .dropdown-item:hover { background: rgba(255,255,255,0.05); color: var(--neon-color); }
+        .dropdown-item i { width: 16px; height: 16px; }
+        .dropdown-item span { font-size: 12px; font-weight: bold; }
+
+        /* Settings Tabs */
+        .settings-tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; overflow-x: auto; }
+        .settings-tab { padding: 8px 12px; font-size: 10px; text-transform: uppercase; border-radius: 4px; color: var(--text-dim); white-space: nowrap; }
+        .settings-tab.active { background: var(--neon-glow); color: var(--neon-color); border: 1px solid var(--neon-color); }
+        .settings-pane { display: none; }
+        .settings-pane.active { display: block; }
+
+        /* Toggle Switches */
+        .switch-container { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--neon-color); }
+        input:checked + .slider:before { transform: translateX(14px); }
+
+        /* Responsive / Utils */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-10 { gap: 10px; }
+        .p-10 { padding: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .w-full { width: 100%; }
+        .text-center { text-align: center; }
+        
+        @media (max-width: 900px) {
+            .main-container { padding: 20px 20px 100px 20px; }
+            .sidebar-nav { min-width: calc(100% - 40px); bottom: 20px; }
+            .journal-sidebar, .calendar-section, .wb-toolbar { display: none; }
+        }
+    </style>
 </head>
-<body class="bg-dark text-white font-sans antialiased overflow-hidden">
-    <div id="app" class="h-screen w-screen flex items-center justify-center relative overflow-hidden bg-dark">
-        <!-- Background Glow -->
-        <div class="glow-sphere top-[-100px] left-[-100px] w-64 h-64 opacity-20"></div>
-        <div class="glow-sphere bottom-[-50px] right-[-50px] w-80 h-80 opacity-10"></div>
+<body data-theme="green">
 
-        <!-- Notification Container -->
-        <div id="notification-container" class="fixed top-8 right-8 z-[1000] flex flex-col items-end pointer-events-none"></div>
+    <!-- LOGIN / REGISTER -->
+    <div id="auth-phase" class="auth-container glass">
+        <div class="auth-avatar-preview">
+            <img id="auth-preview-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" alt="Avatar">
+        </div>
+        <h2 id="auth-title" class="neon-text" style="font-size: 24px; margin-bottom: 10px;">IDENTITY ACCESS</h2>
+        <p id="auth-subtitle" style="font-size: 10px; color: var(--text-dim); margin-bottom: 25px; letter-spacing: 2px;">AUTHENTICATION SECURED</p>
 
-        <!-- Login Phase -->
-        <div id="login-phase" class="phase active w-full flex flex-col items-center z-10 transition-all duration-500">
-            <div class="login-card glass-card flex overflow-hidden w-[800px] h-[400px]">
-                <!-- Left: Form -->
-                <div class="w-1/2 p-10 flex flex-col justify-center border-r border-white/5 relative">
-                    <div class="absolute top-4 left-4 text-[8px] text-neon/30 font-mono">CONNECTION_SECURE_AES_256</div>
-                    <h1 class="text-3xl font-bold mb-1 tracking-tighter text-glow-neon">ACCOUNT ACCESS</h1>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mb-10">Identity Verification Protocol</p>
-                    
-                    <div class="space-y-6">
-                        <div class="input-group">
-                            <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Access Identity</label>
-                            <input type="text" id="username" placeholder="Username..." class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Encrypted Sequence</label>
-                            <input type="password" id="password" placeholder="Password..." class="input-field">
-                        </div>
-                    </div>
-                    <p id="error-msg" class="text-red-500 text-[10px] uppercase font-mono mt-4 h-4 opacity-0 transition-opacity">Invalid access credentials.</p>
-                    
-                    <div class="flex gap-4 mt-6">
-                        <button id="login-btn" class="flex-1 bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-125 transition-all shadow-neon">
-                            Verify Identity
-                        </button>
-                        <button id="guest-login-btn" class="flex-1 bg-white/5 text-gray-400 font-bold py-4 rounded-sm uppercase text-[9px] tracking-widest hover:bg-white/10 border border-white/10 transition-all">
-                            Access as Guest
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Right: Profile Preview -->
-                <div class="w-1/2 flex flex-col items-center justify-center bg-black/40 p-10 relative">
-                    <div class="absolute top-4 right-4 text-[8px] text-gray-600 font-mono">NODE_7G_CALIBRATED</div>
-                    <div class="relative">
-                        <div class="w-[120px] h-[120px] rounded-full border-2 border-neon overflow-hidden shadow-neon bg-black/80">
-                            <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover grayscale brightness-75">
-                        </div>
-                        <div class="absolute -bottom-2 -left-2 bg-black border border-neon/30 px-2 py-0.5 rounded text-[8px] text-neon font-mono pulsing">ONLINE</div>
-                    </div>
-                    <div class="mt-6 text-center">
-                        <p id="preview-username" class="text-sm font-bold tracking-widest text-gray-400 uppercase">Guest_User</p>
-                        <p class="text-[8px] text-gray-600 uppercase mt-1">Status: Restricted Access</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Action -->
-            <button id="show-register-btn" class="mt-8 text-[10px] text-gray-500 hover:text-neon uppercase tracking-[0.4em] transition-all font-mono opacity-80 hover:opacity-100 flex items-center gap-2">
-                <i data-lucide="plus-square" class="w-3 h-3"></i> Initialize New Account
-            </button>
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-mode="login">Login</button>
+            <button class="auth-tab" data-mode="register">Register</button>
         </div>
 
-        <!-- Main Dashboard Phase -->
-        <div id="dashboard-phase" class="phase w-full h-full flex flex-col hidden overflow-hidden">
-            <!-- Header -->
-            <header class="flex justify-between items-center px-8 py-6 shrink-0 border-b border-white/5 bg-black/40 backdrop-blur-md z-50">
-                <div>
-                    <h1 class="text-xl font-bold tracking-tighter text-glow-neon uppercase">System Core</h1>
-                    <p class="text-[8px] text-gray-500 uppercase tracking-[0.4em] mt-1">Node: #NF-7729-AX // Status: Healthy</p>
+        <form id="auth-form">
+            <div id="reg-fields" class="hidden">
+                <div class="input-group">
+                    <label>Avatar Seed</label>
+                    <input type="text" id="reg-seed" class="input-field" placeholder="Enter seed code...">
                 </div>
-                <div class="flex items-center gap-6">
-                    <div class="text-right">
-                        <p id="current-time" class="text-lg font-mono text-neon font-bold">00:00:00</p>
-                        <p id="current-date" class="text-[8px] text-gray-600 uppercase font-mono tracking-widest">May 15, 2026</p>
-                    </div>
-                    <div class="flex items-center gap-3 pl-6 border-l border-white/10 relative cursor-pointer group z-[60]" id="profile-trigger">
-                        <div class="text-right pointer-events-none">
-                            <p class="text-sm font-bold text-gray-300 uppercase tracking-widest" id="header-username">Agent</p>
-                            <p class="text-[8px] text-neon/50 uppercase font-mono">Prime Access</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-full border border-neon/50 overflow-hidden shadow-neon-sm active-glow transition-all pointer-events-none">
-                            <img id="header-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
-                        </div>
-
-                        <!-- Profile Dropdown Menu -->
-                        <div id="profile-dropdown" class="absolute top-[calc(100%+1rem)] right-0 w-72 glass-card border border-white/10 shadow-2xl opacity-0 translate-y-2 pointer-events-none transition-all duration-300 z-[70] overflow-hidden">
-                            <div class="p-6 border-b border-white/5 bg-black/40">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-full border border-neon shadow-neon-sm overflow-hidden">
-                                        <img id="dropdown-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
-                                    </div>
-                                    <div>
-                                        <p id="dropdown-username" class="text-sm font-bold text-glow-neon uppercase tracking-widest">Aditya</p>
-                                        <p class="text-[8px] text-gray-500 uppercase font-mono">Session ID: #NF-7729</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="p-2 space-y-1">
-                                <button class="profile-menu-item" data-phase="account">
-                                    <i data-lucide="user" class="w-4 h-4 text-neon"></i>
-                                    <span>Account Settings</span>
-                                </button>
-                                <button class="profile-menu-item" data-phase="system">
-                                    <i data-lucide="settings" class="w-4 h-4 text-neon"></i>
-                                    <span>System Preferences</span>
-                                </button>
-                                <button class="profile-menu-item" data-phase="security">
-                                    <i data-lucide="shield-check" class="w-4 h-4 text-neon"></i>
-                                    <span>Security & Cores</span>
-                                </button>
-                                <div class="h-[1px] bg-white/5 my-2"></div>
-                                <button id="menu-lock-btn" class="profile-menu-item text-blue-400/80 hover:text-blue-400">
-                                    <i data-lucide="lock" class="w-4 h-4"></i>
-                                    <span>Lock Core</span>
-                                </button>
-                                <button id="menu-logout-btn" class="profile-menu-item text-red-500/80 hover:text-red-500">
-                                    <i data-lucide="power" class="w-4 h-4"></i>
-                                    <span>Terminate Session</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="reg-email" class="input-field" placeholder="email@lumina.home">
                 </div>
-            </header>
+            </div>
+            <div class="input-group">
+                <label>Access Alias</label>
+                <input type="text" id="auth-user" class="input-field" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <label>Private Sequence (PIN)</label>
+                <input type="password" id="auth-pass" class="input-field" placeholder="Password" required>
+            </div>
+            <p id="auth-error" class="hidden" style="color: #ff4444; font-size: 10px; margin-bottom: 20px;"></p>
+            <button type="submit" id="auth-submit" class="btn-neon w-full" style="padding: 15px;">Verify Terminal</button>
+            <button type="button" id="auth-guest" class="w-full" style="margin-top: 15px; font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px;">Access as Guest</button>
+        </form>
+    </div>
 
-            <!-- Settings Modal (Overlay) -->
-            <div id="settings-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 hidden opacity-0 transition-opacity duration-300">
-                <div class="glass-card w-full max-w-4xl h-[600px] flex overflow-hidden border-neon/10">
-                    <!-- Sidebar -->
-                    <div class="w-64 border-r border-white/5 flex flex-col p-6 bg-black/40">
-                        <div class="mb-10">
-                            <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">Control Center</h2>
-                            <p class="text-[8px] text-gray-600 uppercase font-mono">Global System Overrides</p>
-                        </div>
-                        
-                        <nav class="flex-1 space-y-2">
-                            <button class="settings-nav-btn active" data-tab="account">
-                                <i data-lucide="user"></i> Account Identity
-                            </button>
-                            <button class="settings-nav-btn" data-tab="system">
-                                <i data-lucide="sliders"></i> System Tuning
-                            </button>
-                            <button class="settings-nav-btn" data-tab="security">
-                                <i data-lucide="shield"></i> Session Security
-                            </button>
-                        </nav>
-                        
-                        <button id="close-settings-btn" class="mt-auto border border-white/10 p-3 text-[10px] uppercase font-bold tracking-widest hover:bg-white/5 transition-all">Close Interface</button>
+    <!-- MAIN DASHBOARD -->
+    <div id="app-dashboard">
+        <header>
+            <div class="header-logo">
+                <h1 class="neon-text" style="font-size: 18px; font-weight: 800; letter-spacing: -1px;">LUMINA <span style="font-weight: 200; opacity: 0.5;">HOME</span></h1>
+                <div style="font-size: 8px; color: var(--text-dim); letter-spacing: 2px; margin-top: 2px;">PERSONAL_COMPANION</div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <div class="header-clock" style="text-align: right;">
+                    <div id="display-time" style="font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: bold;">00:00:00</div>
+                    <div id="display-date" style="font-size: 9px; color: var(--text-dim); text-transform: uppercase;">JANUARY 01, 2026</div>
+                </div>
+                <!-- Profile Trigger - Modified for Phase 0 requirements -->
+                <div class="header-profile" id="profile-trigger">
+                    <div style="text-align: right;">
+                        <div id="user-display-name" style="font-size: 12px; font-weight: bold;">ADITYA</div>
+                        <div style="font-size: 7px; color: var(--neon-color); text-transform: uppercase;">System Admin</div>
                     </div>
+                    <img id="user-display-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="header-avatar" alt="User">
                     
-                    <!-- Content Area -->
-                    <div class="flex-1 p-10 overflow-y-auto custom-scrollbar">
-                        
-                        <!-- Account Settings Tab -->
-                        <div id="settings-account" class="settings-tab active space-y-10">
-                            <section>
-                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="user" class="w-4 h-4"></i> Identity Management
-                                </h3>
-                                <div class="grid grid-cols-2 gap-8 items-start">
-                                    <div class="space-y-6">
-                                        <div class="input-group">
-                                            <label class="block text-[8px] uppercase tracking-widest text-gray-500 mb-2">Neural Alias</label>
-                                            <input type="text" id="set-username" class="input-field" placeholder="New Username">
-                                        </div>
-                                        <div class="input-group">
-                                            <label class="block text-[8px] uppercase tracking-widest text-gray-500 mb-2">Primary Core Email (LOCKED)</label>
-                                            <div class="relative">
-                                                <input type="text" id="email-locked" class="input-field opacity-40 cursor-not-allowed pr-10" readonly value="agent@neural.core">
-                                                <i data-lucide="lock" class="absolute right-2 top-2.5 w-4 h-4 text-gray-600"></i>
-                                            </div>
-                                        </div>
-                                        <button id="update-profile-btn" class="bg-neon text-black px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon">Update Profile</button>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-32 h-32 rounded-full border-2 border-neon/20 overflow-hidden mb-4 relative group cursor-pointer" onclick="document.getElementById('avatar-update-input').click()">
-                                            <img id="set-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
-                                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <i data-lucide="upload" class="w-8 h-8 text-neon"></i>
-                                            </div>
-                                        </div>
-                                        <input type="file" id="avatar-update-input" class="hidden" accept="image/*">
-                                        <p class="text-[8px] text-gray-600 uppercase font-mono">Neural Signature (.PNG / .JPG)</p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section>
-                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="key" class="w-4 h-4"></i> Passphrase Sequence
-                                </h3>
-                                <div class="max-w-md space-y-6">
-                                    <input type="password" id="set-old-pass" placeholder="Current Sequence" class="input-field">
-                                    <input type="password" id="set-new-pass" placeholder="New Sequence" class="input-field">
-                                    <button id="update-pass-btn" class="border border-neon/30 text-neon px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-neon/10 transition-all">Rotate Sequence</button>
-                                </div>
-                            </section>
+                    <!-- Updated Profile Dropdown -->
+                    <div id="profile-dropdown" class="profile-dropdown glass">
+                        <div class="p-10 border-b border-white/10 mb-5">
+                            <p id="dropdown-email" style="font-size: 9px; color: var(--text-dim); word-break: break-all;">user@lumina.home</p>
                         </div>
-
-                        <!-- System Tuning Tab -->
-                        <div id="settings-system" class="settings-tab hidden space-y-10">
-                            <section>
-                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="bell" class="w-4 h-4"></i> Digital Notifications
-                                </h3>
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
-                                        <div>
-                                            <p class="text-[10px] font-bold uppercase">System Alerts</p>
-                                            <p class="text-[8px] text-gray-600">Flash neon border on critical events</p>
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
-                                            <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neon/50 peer-checked:after:bg-neon"></div>
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-lg">
-                                        <div>
-                                            <p class="text-[10px] font-bold uppercase">Audio Logs</p>
-                                            <p class="text-[8px] text-gray-600">Enable synth-feedback on interactions</p>
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer">
-                                            <div class="w-10 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neon/50 peer-checked:after:bg-neon"></div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section>
-                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="palette" class="w-4 h-4"></i> Neon Hue Tuning
-                                </h3>
-                                <div class="grid grid-cols-4 gap-4" id="theme-selector">
-                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-neon rounded-lg transition-all" data-theme="green">
-                                        <div class="w-full h-8 bg-[#39ff14] shadow-neon rounded-sm"></div>
-                                        <span class="text-[8px] uppercase font-bold text-[#39ff14]">Green Core</span>
-                                    </button>
-                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-blue-500/50 rounded-lg transition-all" data-theme="blue">
-                                        <div class="w-full h-8 bg-[#0088ff] rounded-sm"></div>
-                                        <span class="text-[8px] uppercase font-bold text-gray-600">Cyber Blue</span>
-                                    </button>
-                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-red-500/50 rounded-lg transition-all" data-theme="red">
-                                        <div class="w-full h-8 bg-[#ff4444] rounded-sm"></div>
-                                        <span class="text-[8px] uppercase font-bold text-gray-600">Neural Red</span>
-                                    </button>
-                                    <button class="theme-btn flex flex-col items-center gap-2 p-3 bg-white/5 border-2 border-transparent hover:border-purple-500/50 rounded-lg transition-all" data-theme="purple">
-                                        <div class="w-full h-8 bg-[#aa00ff] rounded-sm"></div>
-                                        <span class="text-[8px] uppercase font-bold text-gray-600">Void Purple</span>
-                                    </button>
-                                </div>
-                            </section>
-                        </div>
-
-                        <!-- Session Security Tab -->
-                        <div id="settings-security" class="settings-tab hidden space-y-10">
-                            <section>
-                                <h3 class="text-xs font-bold text-neon uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="activity" class="w-4 h-4"></i> Session Diagnostics
-                                </h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="p-4 bg-white/[0.02] border border-white/5 rounded-lg">
-                                        <p class="text-[8px] text-gray-600 uppercase mb-1">Authenticated Node</p>
-                                        <p class="text-xs font-mono text-gray-300" id="diag-node">#NF-7729-AX</p>
-                                    </div>
-                                    <div class="p-4 bg-white/[0.02] border border-white/5 rounded-lg">
-                                        <p class="text-[8px] text-gray-600 uppercase mb-1">Last Sync Timestamp</p>
-                                        <p class="text-xs font-mono text-gray-300" id="diag-time">2026-05-15 14:22</p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section>
-                                <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-6 pb-2 border-b border-white/5 flex items-center gap-2">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Danger Protocol
-                                </h3>
-                                <div class="p-6 bg-red-500/5 border border-red-500/20 rounded-lg">
-                                    <p class="text-[10px] font-bold text-red-400 uppercase mb-2">Flush Component Cache</p>
-                                    <p class="text-[9px] text-gray-500 mb-6 leading-relaxed">This operation will purge all temporary neural buffers and local storage cache. Current session credentials and global states will remain intact.</p>
-                                    <button id="flush-cache-btn" class="border border-red-500/30 text-red-500 px-6 py-2 text-[8px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-black transition-all">Execute Purge Protocol</button>
-                                </div>
-                            </section>
-                        </div>
+                        <button class="dropdown-item" data-action="account-info"><i data-lucide="info"></i> <span>Informasi Akun</span></button>
+                        <button class="dropdown-item" data-action="edit-account"><i data-lucide="user"></i> <span>Edit Akun</span></button>
+                        <button class="dropdown-item" data-action="settings"><i data-lucide="settings"></i> <span>Pengaturan</span></button>
+                        <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 5px 0;">
+                        <button class="dropdown-item" style="color: #ff4444;" data-action="logout"><i data-lucide="log-out"></i> <span>Keluar</span></button>
                     </div>
                 </div>
             </div>
+        </header>
 
-            <!-- Lock Screen Overlay -->
-            <div id="lock-screen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[200] flex flex-col items-center justify-center p-6 hidden opacity-0 transition-opacity duration-500">
-                <div class="text-center space-y-12 max-w-sm w-full">
-                    <div class="relative inline-block">
-                        <div class="w-32 h-32 rounded-full border-2 border-neon shadow-[0_0_40px_rgba(57,255,20,0.4)] overflow-hidden mx-auto mb-6">
-                            <img id="lock-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" class="w-full h-full object-cover">
-                        </div>
-                        <i data-lucide="lock" class="absolute -bottom-2 -right-2 bg-neon text-black p-2 rounded-full w-8 h-8 shadow-neon"></i>
-                    </div>
-                    
-                    <div>
-                        <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter mb-2" id="lock-username">AGENT ADITYA</h2>
-                        <p class="text-[8px] text-gray-600 uppercase tracking-[0.5em]">CORE_STATE: ENCRYPT_LOCK</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <input type="password" id="unlock-pass" placeholder="Input Unlock Sequence..." class="input-field text-center font-mono py-4 text-lg">
-                        <p id="unlock-error" class="text-red-500 text-[10px] uppercase h-4 opacity-0">Incorrect Sequence</p>
-                        <button id="unlock-btn" class="w-full bg-neon text-black font-bold py-4 text-xs uppercase tracking-widest hover:brightness-110 shadow-neon">Verify Core Access</button>
-                    </div>
-                </div>
-            </div>
+        <div class="main-container">
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="overview"><i data-lucide="layout"></i><span>Core</span></button>
+                <button class="nav-item" data-view="journal"><i data-lucide="book-open"></i><span>Logs</span></button>
+                <button class="nav-item" data-view="todo"><i data-lucide="check-circle"></i><span>Tasks</span></button>
+                <button class="nav-item" data-view="whiteboard"><i data-lucide="edit-3"></i><span>Sketch</span></button>
+                <button class="nav-item" data-view="music"><i data-lucide="music"></i><span>Music</span></button>
+                <button class="nav-item" data-view="data"><i data-lucide="database"></i><span>Data</span></button>
+            </nav>
 
-            <!-- Dynamic Content Area -->
-            <main id="main-content" class="flex-1 relative overflow-y-auto custom-scrollbar p-8">
-                
-                <!-- View: Overview (Default Dashboard) -->
-                <div id="view-overview" class="view active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Activity Tracking -->
-                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Activity Tracking</h3>
-                        <div class="flex items-end justify-between">
-                            <span id="stat-monthly-tasks" class="text-4xl font-mono text-white">0</span>
-                            <i data-lucide="activity" class="text-neon w-8 h-8 opacity-40"></i>
+            <main style="height: 100%; overflow: hidden;">
+                <!-- VIEW OVERVIEW -->
+                <div id="view-overview" class="view-content active">
+                    <div class="overview-grid">
+                        <div class="stat-card glass">
+                            <span class="stat-label">Active Objectives</span>
+                            <span id="stat-todos" class="stat-value neon-text">00</span>
                         </div>
-                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden mt-4">
-                            <div id="activity-bar" class="bg-neon h-full w-[0%] shadow-neon transition-all duration-1000"></div>
+                        <div class="stat-card glass">
+                            <span class="stat-label">Archive Nodes</span>
+                            <span id="stat-journals" class="stat-value neon-text">00</span>
                         </div>
-                        <p class="text-[8px] text-gray-600 mt-2 uppercase">Tasks completed in last 30 intervals</p>
-                    </div>
-
-                    <!-- Core Integrity -->
-                    <div class="glass-card p-6 flex flex-col justify-center items-center h-[180px]">
-                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">Core Integrity</h3>
-                        <div id="core-status" class="text-3xl font-bold text-neon tracking-widest animate-pulse">OPTIMAL</div>
-                        <p class="text-[8px] text-gray-600 mt-2 font-mono">NODE_HEALTH: SECURE</p>
-                    </div>
-
-                    <!-- Task Reminders (Routine) -->
-                    <div class="glass-card p-6 lg:col-span-2 flex flex-col h-[180px]">
-                        <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-                            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Task Reminder</h3>
-                            <div class="px-2 py-0.5 bg-neon/10 border border-neon/30 rounded text-[6px] font-bold text-neon uppercase tracking-widest">Routine Buffer</div>
-                        </div>
-                        <div id="reminder-container" class="space-y-2 flex-1 overflow-y-auto no-scrollbar">
-                            <p class="text-[8px] text-gray-700 italic">Scanning routine protocols...</p>
-                        </div>
-                    </div>
-
-                    <!-- Counters -->
-                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Active Objectives</h3>
-                        <div class="flex items-center justify-between">
-                            <span id="overview-todo-count" class="text-4xl font-mono text-white">00</span>
-                            <i data-lucide="target" class="text-neon w-6 h-6 opacity-30"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="glass-card p-6 flex flex-col justify-between h-[180px]">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Journal Nodes</h3>
-                        <div class="flex items-center justify-between">
-                            <span id="overview-journal-count" class="text-4xl font-mono text-white">00</span>
-                            <i data-lucide="database" class="text-neon w-6 h-6 opacity-30"></i>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming Schedules (Existing feature but renamed logic later) -->
-                    <div class="lg:col-span-2 glass-card p-6 h-[180px] flex flex-col">
-                        <h3 class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Mission Events</h3>
-                        <div id="dash-schedule-list" class="space-y-3 overflow-y-auto no-scrollbar">
-                            <p class="text-[8px] text-gray-700 italic">No events scheduled.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- View: Journal -->
-                <div id="view-journal" class="view hidden h-full flex flex-col">
-                    <div class="flex gap-6 h-full overflow-hidden">
-                        <div class="w-64 shrink-0 flex flex-col gap-4">
-                            <button id="add-journal-btn" class="w-full bg-neon text-black font-bold py-3 uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-neon-sm flex items-center justify-center gap-2">
-                                <i data-lucide="plus" class="w-3 h-3"></i> New Entry
-                            </button>
-                            <div id="journal-list" class="flex-1 overflow-y-auto no-scrollbar space-y-2">
-                                <!-- Journal list items will be injected -->
+                        <div class="stat-card glass">
+                            <span class="stat-label">Weekly Achievement</span>
+                            <div id="weekly-chart" class="chart-container">
+                                <div class="chart-bar" style="height: 20%;"></div>
+                                <div class="chart-bar" style="height: 40%;"></div>
+                                <div class="chart-bar" style="height: 30%;"></div>
+                                <div class="chart-bar" style="height: 70%;"></div>
+                                <div class="chart-bar" style="height: 50%;"></div>
+                                <div class="chart-bar" style="height: 90%;"></div>
+                                <div class="chart-bar" style="height: 60%;"></div>
                             </div>
                         </div>
-                        <div class="flex-1 glass-card flex flex-col overflow-hidden relative" id="journal-editor-container">
-                            <!-- Paper Lines Layer -->
-                            <div id="paper-lines" class="absolute inset-0 pointer-events-none opacity-5 hidden" style="background-image: linear-gradient(#39ff14 1px, transparent 1px); background-size: 100% 2em;"></div>
-                            
-                            <!-- Toolbar -->
-                            <div class="p-3 border-b border-white/5 bg-black/40 flex flex-wrap gap-4 items-center z-10">
-                                <select id="jr-font-family" class="bg-black/60 border border-white/10 text-[10px] text-neon px-2 py-1 outline-none font-mono">
-                                    <option value="font-mono">JetBrains Mono</option>
-                                    <option value="font-sans">Inter UI</option>
-                                    <option value="font-serif">Playfair</option>
-                                </select>
-                                
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[8px] uppercase text-gray-600">Size</span>
-                                    <input type="number" id="jr-font-size" value="14" class="w-12 bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none">
-                                </div>
+                    </div>
 
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[8px] uppercase text-gray-600">Space</span>
-                                    <input type="number" id="jr-spacing" value="1.5" step="0.1" class="w-12 bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none">
+                    <div class="mt-20" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Activity Tracking -->
+                        <div class="glass p-10" style="min-height: 250px;">
+                            <h3 class="neon-text" style="font-size: 10px; margin-bottom: 15px; letter-spacing: 2px;">ACTIVITY TRACKING</h3>
+                            <div id="activity-tracking-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                <li style="font-size: 12px; opacity: 0.3; font-style: italic;">Monitoring monthly throughput...</li>
+                            </div>
+                        </div>
+                        <!-- Task Reminder -->
+                        <div class="glass p-10" style="min-height: 250px;">
+                            <h3 class="neon-text" style="font-size: 10px; margin-bottom: 15px; letter-spacing: 2px;">TASK REMINDER</h3>
+                            <div id="task-reminder-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="padding: 10px; border-left: 2px solid #ffa500; background: rgba(255, 165, 0, 0.05);">
+                                    <p style="font-size: 11px; font-weight: bold;">System Checkpoint</p>
+                                    <p style="font-size: 9px; color: var(--text-dim);">Routine maintenance due in 2 hours.</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[8px] uppercase text-gray-600">Para</span>
-                                    <select id="jr-paragraph-align" class="bg-black/60 border border-white/10 text-[10px] text-white px-1 py-1 outline-none font-mono">
-                                        <option value="text-left">Left</option>
-                                        <option value="text-center">Center</option>
-                                        <option value="text-right">Right</option>
-                                        <option value="text-justify">Justify</option>
+                <!-- VIEW JOURNAL -->
+                <div id="view-journal" class="view-content">
+                    <div class="journal-container">
+                        <div class="journal-sidebar">
+                            <button id="jr-new-btn" class="btn-neon" style="width: 100%; margin-bottom: 10px;"><i data-lucide="plus" style="width: 14px; height: 14px; vertical-align: middle;"></i> New Entry</button>
+                            <div id="jr-list" class="journal-list"></div>
+                        </div>
+                        <div class="journal-editor glass">
+                            <div class="editor-toolbar">
+                                <div class="toolbar-group">
+                                    <label>Font</label>
+                                    <select id="jr-font">
+                                        <option value="'Inter', sans-serif">Sans</option>
+                                        <option value="'JetBrains Mono', monospace">Mono</option>
+                                        <option value="'Playfair Display', serif">Serif</option>
+                                        <option value="'Space Grotesk', sans-serif">Modern</option>
                                     </select>
                                 </div>
-
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[8px] uppercase text-gray-600">Ink</span>
-                                    <input type="color" id="jr-font-color" value="#ffffff" class="w-6 h-6 border-none bg-transparent cursor-pointer">
+                                <div class="toolbar-group">
+                                    <label>Size</label>
+                                    <input type="number" id="jr-size" value="16" min="8" max="72" style="width: 35px;">
                                 </div>
-
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[8px] uppercase text-gray-600">Paper</span>
-                                    <input type="color" id="jr-paper-color" value="#000000" class="w-6 h-6 border-none bg-transparent cursor-pointer">
+                                <div class="toolbar-group">
+                                    <label>Spacing</label>
+                                    <input type="number" id="jr-spacing" value="1.6" min="1.0" max="3.0" step="0.1" style="width: 35px;">
                                 </div>
-
-                                <button id="btn-toggle-lines" class="p-2 hover:bg-white/5 text-gray-500 hover:text-neon transition-colors" title="Toggle Paper Lines">
-                                    <i data-lucide="align-justify" class="w-4 h-4"></i>
-                                </button>
-
-                                <div class="ml-auto">
-                                    <button id="save-journal-btn" class="bg-neon/10 border border-neon/30 text-neon px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:bg-neon hover:text-black transition-all">
-                                        Save Log
-                                    </button>
+                                <div class="toolbar-group">
+                                    <label>Align</label>
+                                    <select id="jr-align">
+                                        <option value="left">Left</option>
+                                        <option value="center">Center</option>
+                                        <option value="right">Right</option>
+                                        <option value="justify">Justify</option>
+                                    </select>
                                 </div>
+                                <div class="toolbar-group">
+                                    <label>Color</label>
+                                    <input type="color" id="jr-color" value="#e0e0e0">
+                                </div>
+                                <div class="toolbar-group">
+                                    <label>Paper</label>
+                                    <input type="color" id="jr-paper" value="#0a0b10">
+                                    <select id="jr-paper-style" style="margin-left: 5px;">
+                                        <option value="plain">Plain</option>
+                                        <option value="lined">Lined</option>
+                                    </select>
+                                </div>
+                                <button id="jr-save-btn" class="neon-text" style="margin-left: auto; font-size: 10px; font-weight: bold; text-transform: uppercase;">Commit</button>
                             </div>
-
-                            <div class="p-8 flex-1 flex flex-col z-0">
-                                <input type="text" id="journal-title" placeholder="PROTOCOL TITLE..." class="bg-transparent border-none text-2xl font-bold text-white tracking-widest focus:ring-0 mb-6 placeholder-white/10 uppercase">
-                                <textarea id="journal-body" placeholder="Begin neutral data log..." class="flex-1 bg-transparent border-none text-gray-400 focus:ring-0 resize-none font-mono placeholder-white/5 leading-relaxed"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- View: Todo (Objectives & Calendar) -->
-                <div id="view-todo" class="view hidden h-full flex flex-col">
-                    <div class="flex gap-8 h-full overflow-hidden">
-                        <!-- Left: Calendar (30%) -->
-                        <div class="w-[30%] shrink-0 flex flex-col gap-6">
-                            <div class="glass-card p-6 flex-1 flex flex-col">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 id="cal-month-title" class="text-[10px] font-bold text-neon uppercase tracking-tighter">May 2026</h3>
-                                    <div class="flex gap-2">
-                                        <button id="cal-prev" class="p-1 hover:text-neon transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                                        <button id="cal-next" class="p-1 hover:text-neon transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-7 gap-1 text-[8px] text-gray-600 font-bold uppercase text-center mb-4">
-                                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                                </div>
-                                <div id="calendar-grid" class="grid grid-cols-7 gap-1 flex-1">
-                                    <!-- Calendar days -->
-                                </div>
-                            </div>
-
-                            <!-- Mission events (Schedules) -->
-                            <div class="glass-card p-6 border-white/5">
-                                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Register Schedule Event</h3>
-                                <div class="space-y-4">
-                                    <input type="text" id="sch-event" placeholder="Major Event Name..." class="input-field text-xs py-3">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <input type="date" id="sch-date" class="input-field text-xs py-3">
-                                        <input type="time" id="sch-time" class="input-field text-xs py-3">
-                                    </div>
-                                    <button id="add-sch-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-neon-sm">
-                                        Commence Event Protocol
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right: Tasks (70%) -->
-                        <div class="flex-1 flex flex-col gap-6">
-                            <div class="grid grid-cols-2 gap-6 h-full overflow-hidden">
-                                <!-- Objectives Section -->
-                                <div class="flex flex-col gap-4 overflow-hidden">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h2 class="text-xl font-bold text-white tracking-widest uppercase">Objectives</h2>
-                                            <p class="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-mono">Mission Status</p>
-                                        </div>
-                                        <div id="todo-count-display-main" class="text-2xl font-bold text-neon tracking-tighter">0</div>
-                                    </div>
-
-                                    <div class="flex-1 flex flex-col glass-card border-white/5 overflow-hidden font-mono">
-                                        <div class="p-4 border-b border-white/5 flex gap-2 bg-white/[0.02]">
-                                            <input type="text" id="todo-input-main" placeholder="Execute objective..." class="flex-1 bg-transparent border-b border-white/10 text-white focus:border-neon focus:ring-0 transition-all py-1 placeholder-white/20 font-mono text-xs">
-                                            <button id="add-todo-btn-main" class="bg-neon/10 border border-neon/30 text-neon px-4 uppercase text-[8px] font-bold tracking-widest hover:bg-neon hover:text-black transition-all">
-                                                Commit
-                                            </button>
-                                            <button id="open-routine-btn" class="bg-white/5 border border-white/10 text-white/50 px-3 uppercase text-[10px] font-bold tracking-widest hover:border-white transition-all" title="Create Routine">
-                                                <i data-lucide="rotate-cw" class="w-3 h-3"></i>
-                                            </button>
-                                        </div>
-                                        <div id="todo-list-main" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                                            <!-- Tasks appear here -->
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Full Schedule Table -->
-                                <div class="flex flex-col gap-4 overflow-hidden">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h2 class="text-xl font-bold text-white tracking-widest uppercase">Schedule</h2>
-                                            <p class="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-mono">Neural Sequence</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex-1 flex flex-col glass-card border-white/5 overflow-hidden">
-                                        <div id="full-schedule-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                                            <!-- Schedules appear here -->
-                                        </div>
-                                    </div>
-                                </div>
+                            <div id="journal-canvas" class="editor-content">
+                                <input type="text" id="journal-title" placeholder="PROTOCOL TITLE" style="font-size: 24px; font-weight: 800; border: none; background: transparent; color: white; margin-bottom: 20px;">
+                                <textarea id="journal-body" placeholder="Begin data stream..."></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- View: Whiteboard -->
-                <div id="view-whiteboard" class="view hidden h-full flex flex-col">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-glow-neon uppercase tracking-tighter">Neural Schematic</h2>
-                            <p class="text-[8px] text-gray-500 uppercase tracking-widest font-mono">Visual data projection // Phase 4</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="wb-undo" class="p-2 bg-white/5 border border-white/10 rounded hover:text-neon transition-all" title="Undo"><i data-lucide="undo" class="w-4 h-4"></i></button>
-                            <button id="wb-redo" class="p-2 bg-white/5 border border-white/10 rounded hover:text-neon transition-all" title="Redo"><i data-lucide="redo" class="w-4 h-4"></i></button>
-                            <div class="w-[1px] h-4 bg-white/10 mx-2"></div>
-                            <button id="wb-save" class="bg-neon text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-neon">Transmit PNG</button>
-                            <button id="wb-clear" class="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Flush Buffer</button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-6 flex-1 min-h-0">
-                        <!-- Sketch Toolbar -->
-                        <div class="w-64 glass-card p-4 flex flex-col space-y-6">
-                            <div>
-                                <h4 class="text-[8px] uppercase text-gray-500 mb-3 tracking-widest font-bold">Brush Dynamics</h4>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button id="tool-pen" class="tool-btn active p-3 bg-neon/20 border border-neon/50 text-neon rounded-lg flex flex-col items-center gap-1 transition-all">
-                                        <i data-lucide="pen-tool" class="w-4 h-4"></i>
-                                        <span class="text-[8px]">Brush</span>
-                                    </button>
-                                    <button id="tool-bucket" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
-                                        <i data-lucide="paint-bucket" class="w-4 h-4"></i>
-                                        <span class="text-[8px]">Bucket</span>
-                                    </button>
-                                    <button id="tool-eraser" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
-                                        <i data-lucide="eraser" class="w-4 h-4"></i>
-                                        <span class="text-[8px]">Eraser</span>
-                                    </button>
-                                    <button id="tool-line" class="tool-btn p-3 bg-white/5 border border-white/5 text-gray-500 rounded-lg flex flex-col items-center gap-1 hover:bg-white/10">
-                                        <i data-lucide="minus" class="w-4 h-4"></i>
-                                        <span class="text-[8px]">Line</span>
-                                    </button>
+                <!-- VIEW TODO -->
+                <div id="view-todo" class="view-content">
+                    <div class="todo-calendar-container">
+                        <div class="calendar-section glass p-10">
+                            <div class="calendar-widget">
+                                <div class="cal-header">
+                                    <button id="cal-prev"><i data-lucide="chevron-left"></i></button>
+                                    <span id="cal-month-name">MAY 2026</span>
+                                    <button id="cal-next"><i data-lucide="chevron-right"></i></button>
                                 </div>
-                            </div>
-
-                            <div>
-                                <h4 class="text-[8px] uppercase text-gray-500 mb-3 tracking-widest font-bold">Rulers</h4>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button id="ruler-none" class="ruler-btn active p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Free</button>
-                                    <button id="ruler-sym-4" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 4</button>
-                                    <button id="ruler-sym-8" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 8</button>
-                                    <button id="ruler-sym-12" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Sym 12</button>
-                                    <button id="ruler-oval" class="ruler-btn p-2 border border-white/10 text-[8px] uppercase text-gray-500 hover:text-neon">Oval</button>
+                                <div class="cal-grid">
+                                    <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div>
                                 </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div class="space-y-2">
-                                    <div class="flex justify-between items-center text-[8px] uppercase text-gray-600">
-                                        <span>Stroke Size</span>
-                                        <span id="brush-size-label">5px</span>
-                                    </div>
-                                    <input type="range" id="wb-brush-size" min="1" max="50" value="5" class="w-full accent-neon cursor-pointer">
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="text-[8px] text-gray-600 uppercase">Ink Color</div>
-                                    <input type="color" id="wb-brush-color" value="#39ff14" class="w-full h-10 border-none bg-transparent cursor-pointer rounded-lg overflow-hidden">
+                                <div id="cal-days" class="cal-grid" style="margin-top: 5px;"></div>
+                                
+                                <div id="cal-events-list" class="mt-20">
+                                    <h4 style="font-size: 10px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase;">Scheduled Routines</h4>
+                                    <div id="day-event-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="flex-1 bg-white border-2 border-neon rounded-xl relative shadow-neon-sm overflow-hidden">
-                            <canvas id="whiteboard-canvas" class="w-full h-full cursor-crosshair"></canvas>
+                        <div class="todo-section">
+                            <div class="todo-input-box">
+                                <input type="text" id="todo-input" class="input-field" placeholder="Enter new objective..." style="border: none; border-bottom: 1px solid var(--glass-border);">
+                                <button id="todo-add-btn" class="btn-neon"><i data-lucide="plus"></i></button>
+                                <button id="routine-open-btn" class="glass" style="padding: 0 15px;"><i data-lucide="repeat"></i></button>
+                            </div>
+                            <div id="todo-display-list" class="todo-list"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- View: Data (Analytics) -->
-                <div id="view-data" class="view hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="glass-card p-8">
-                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Daily Schedule Suggestions</h2>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Neural efficiency optimization</p>
-                            
-                            <div id="suggestion-container" class="space-y-6">
-                                <div class="p-6 bg-white/[0.02] border border-white/5 rounded-xl group hover:border-neon/20 transition-all">
-                                    <h4 class="text-[10px] font-bold text-neon uppercase mb-2">Morning Synchronization (08:00)</h4>
-                                    <p class="text-[9px] text-gray-400 leading-relaxed uppercase">Prioritize routine protocols and mission alignment. Execute core system diagnostics before opening external links.</p>
+                <!-- VIEW WHITEBOARD -->
+                <div id="view-whiteboard" class="view-content">
+                    <div class="wb-container">
+                        <div class="wb-toolbar glass">
+                            <div class="tool-grid">
+                                <button class="tool-btn active" data-tool="pen"><i data-lucide="pen-tool"></i><span>Pen</span></button>
+                                <button class="tool-btn" data-tool="eraser"><i data-lucide="eraser"></i><span>Eraser</span></button>
+                                <button class="tool-btn" data-tool="bucket"><i data-lucide="paint-bucket"></i><span>Fill</span></button>
+                                <button class="tool-btn" data-tool="line"><i data-lucide="minus"></i><span>Line</span></button>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Ruler Guides</label>
+                                <select id="wb-ruler" class="input-field" style="border: 1px solid var(--glass-border); padding: 5px;">
+                                    <option value="none">Freehand</option>
+                                    <option value="circle">Oval Ruler</option>
+                                    <option value="line">Line Ruler</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Stroke Weight</label>
+                                <input type="range" id="wb-width" min="1" max="50" value="5" class="w-full">
+                            </div>
+                            <div class="input-group">
+                                <label>Ink Color</label>
+                                <input type="color" id="wb-color" value="#39ff14" class="w-full" style="height: 40px; background: none; border-radius: 8px;">
+                            </div>
+                            <div class="input-group">
+                                <label>Mirror Guides (Symmetry)</label>
+                                <select id="wb-sym" class="input-field" style="border: 1px solid var(--glass-border); padding: 5px;">
+                                    <option value="1">Off</option>
+                                    <option value="4">4-Axis</option>
+                                    <option value="8">8-Axis</option>
+                                    <option value="12">12-Axis</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; display: flex; flex-direction: column; height: 100%; min-width: 0;">
+                            <div class="wb-header glass mb-5">
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="wb-undo" class="glass" style="padding: 8px; border-radius: 8px;"><i data-lucide="undo-2" style="width: 14px; height: 14px;"></i></button>
+                                    <button id="wb-redo" class="glass" style="padding: 8px; border-radius: 8px;"><i data-lucide="redo-2" style="width: 14px; height: 14px;"></i></button>
                                 </div>
-                                <div class="p-6 bg-white/[0.02] border border-white/5 rounded-xl group hover:border-neon/20 transition-all">
-                                    <h4 class="text-[10px] font-bold text-white uppercase mb-2">Deep Work Cycle (10:00 - 13:00)</h4>
-                                    <p class="text-[9px] text-gray-500 leading-relaxed uppercase">Focus on high-complexity Data Logs and neural schematics. Minimize buffer interruptions for maximum throughput.</p>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button id="wb-save" class="btn-neon" style="padding: 8px 15px; font-size: 10px;">Capture PNG</button>
+                                    <button id="wb-clear" style="font-size: 9px; color: #ff4444; font-weight: bold; background: rgba(255, 68, 68, 0.1); padding: 8px 12px; border-radius: 8px;">FLUSH</button>
+                                </div>
+                            </div>
+                            <div class="wb-canvas-area" id="canvas-resize-target">
+                                <canvas id="wb-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW MUSIC -->
+                <div id="view-music" class="view-content" style="padding: 0;">
+                    <div class="mp-container">
+                        <div class="mp-top-bar">
+                            <span style="font-size: 9px; font-weight: 800; color: var(--text-dim); letter-spacing: 2px;">LUMINA PLAYER</span>
+                            <button id="mp-toggle-playlist" class="glass" style="padding: 6px 12px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 10px; font-weight: bold; opacity: 0.6;">PLAYLIST</span>
+                                <i data-lucide="list-music" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+
+                        <div class="mp-main-content">
+                            <!-- Track Display Info at Top Left -->
+                            <div class="mp-track-header">
+                                <div class="mp-album-art" id="mp-art-container">
+                                    <i data-lucide="music-4" id="mp-art-fallback"></i>
+                                    <img id="mp-art-img" src="" class="hidden">
+                                </div>
+                                <div class="mp-info">
+                                    <h2 class="mp-title neon-text" id="mp-song-title">Selamat datang</h2>
+                                    <p class="mp-artist" id="mp-song-artist">Pilih lagu dari playlist</p>
+                                </div>
+                            </div>
+
+                            <!-- Integrated Controls at Bottom -->
+                            <div class="mp-controls-area">
+                                <div class="mp-timeline-box">
+                                    <div id="mp-timeline" class="mp-timeline-wrapper">
+                                        <div id="mp-progress" class="mp-progress-bar"></div>
+                                    </div>
+                                    <div class="mp-duration">
+                                        <span id="mp-current-time">0:00</span>
+                                        <span id="mp-total-time">0:00</span>
+                                    </div>
+                                </div>
+
+                                <div class="mp-ctrl-btns">
+                                    <button id="mp-shuffle" class="mp-btn-small" title="Shuffle"><i data-lucide="shuffle" style="width: 14px; height: 14px;"></i></button>
+                                    <button id="mp-prev" class="mp-btn-small" title="Previous"><i data-lucide="skip-back" style="width: 18px; height: 18px;"></i></button>
+                                    <button id="mp-play-pause" class="mp-btn-main" title="Play/Pause"><i data-lucide="play" style="width: 22px; height: 22px; margin-left: 2px;"></i></button>
+                                    <button id="mp-next" class="mp-btn-small" title="Next"><i data-lucide="skip-forward" style="width: 18px; height: 18px;"></i></button>
+                                    <button id="mp-repeat" class="mp-btn-small" title="Repeat"><i data-lucide="repeat" style="width: 14px; height: 14px;"></i></button>
+                                </div>
+                                <audio id="mp-audio-engine" class="hidden"></audio>
+                            </div>
+
+                            <!-- Floating Playlist Panel -->
+                            <div class="mp-playlist-panel" id="mp-playlist">
+                                <div class="mp-playlist-header">
+                                    <span style="font-size: 11px; font-weight: 800; letter-spacing: 1px;">DAFTAR ANTRIAN</span>
+                                    <button id="mp-add-btn" class="neon-text" style="font-size: 9px; text-transform: uppercase; font-weight: 900;">+ Tambah Lagu</button>
+                                    <input type="file" id="mp-file-input" class="hidden" accept="audio/*" multiple>
+                                </div>
+                                <div class="mp-queue-list" id="mp-queue"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW DATA -->
+                <div id="view-data" class="view-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div class="glass p-10">
+                            <h2 class="neon-text" style="font-size: 14px; margin-bottom: 20px;">DAILY SCHEDULE SUGGESTIONS</h2>
+                            <div id="schedule-suggestions-list" style="display: flex; flex-direction: column; gap: 15px;">
+                                <div class="glass p-10" style="border-left: 2px solid var(--neon-color);">
+                                    <h4 style="font-size: 12px; margin-bottom: 5px;">Deep Focus Period</h4>
+                                    <p style="font-size: 10px; color: var(--text-dim);">09:00 - 11:30 | Allocate for high-complexity cognitive tasks.</p>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="glass-card p-8 flex flex-col">
-                            <h2 class="text-2xl font-bold text-glow-neon mb-2 uppercase tracking-tighter">Routine Achievements</h2>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">Objective accomplishment metrics</p>
-                            
-                            <div id="achievement-container" class="space-y-8 flex-1 overflow-y-auto custom-scrollbar pr-4">
-                                <!-- Achievement items will be injected -->
-                                <div class="text-center py-20 opacity-20">
-                                    <i data-lucide="award" class="w-12 h-12 mx-auto mb-4"></i>
-                                    <p class="text-[10px] uppercase">No routine achievements stored</p>
-                                </div>
+                        <div class="glass p-10">
+                            <h2 class="neon-text" style="font-size: 14px; margin-bottom: 20px;">ROUTINE ACHIEVEMENTS</h2>
+                            <div id="routine-achievement-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="font-size: 12px; color: var(--text-dim); text-align: center; padding-top: 50px;">INITIALIZING ANALYTICS...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
-
-            <!-- Bottom Navigation -->
-            <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-                <div id="bottom-bar" class="glass-card px-8 py-3 flex items-center gap-10 border-red-900/30 bg-[#4a0404]/60 shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
-                    
-                    <button class="nav-btn active" data-view="overview" title="Dashboard">
-                        <i data-lucide="layout-grid"></i>
-                        <span class="nav-label">Core</span>
-                    </button>
-                    <button class="nav-btn" data-view="todo" title="Objectives">
-                        <i data-lucide="check-square"></i>
-                        <span class="nav-label">Todo</span>
-                    </button>
-                    <button class="nav-btn" data-view="journal" title="Data Log">
-                        <i data-lucide="book-open"></i>
-                        <span class="nav-label">Logs</span>
-                    </button>
-                    <button class="nav-btn" data-view="whiteboard" title="Sketch">
-                        <i data-lucide="brush"></i>
-                        <span class="nav-label">Draw</span>
-                    </button>
-                    <button class="nav-btn" data-view="data" title="Analysis">
-                        <i data-lucide="database"></i>
-                        <span class="nav-label">Data</span>
-                    </button>
-                </div>
-            </nav>
         </div>
+    </div>
 
-        <!-- Registration Modal -->
-        <div id="register-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
-            <div class="glass-card max-w-md w-full p-10 border-neon/20 shadow-2xl">
-                <div class="flex justify-between items-center mb-8">
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen" class="lock-screen">
+        <div class="lock-avatar-box">
+             <img id="lock-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=neutral" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--neon-color); box-shadow: 0 0 30px var(--neon-glow);" alt="User">
+        </div>
+        <div>
+            <h2 id="lock-user-name" class="neon-text" style="font-size: 32px; letter-spacing: 2px;">ADITYA</h2>
+            <p style="font-size: 10px; color: var(--text-dim); margin-top: 10px; letter-spacing: 5px;">LOCKDOWN_MODE_ACTIVE</p>
+        </div>
+        <div style="width: 250px;">
+            <input type="password" id="lock-input" class="input-field text-center" placeholder="CORE SEQUENCE" style="font-size: 18px; padding: 15px 0;">
+            <button id="lock-submit" class="btn-neon w-full mt-20" style="padding: 15px;">Unlock Terminal</button>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 600px;">
+            <h2 class="neon-text" style="margin-bottom: 25px; font-size: 18px;">PENGATURAN SISTEM</h2>
+            
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-pane="ui">Tampilan & UI</button>
+                <button class="settings-tab" data-pane="data">Manajemen Data</button>
+                <button class="settings-tab" data-pane="prefs">Preferensi</button>
+                <button class="settings-tab" data-pane="info">Info</button>
+            </div>
+
+            <!-- Tab: UI -->
+            <div id="pane-ui" class="settings-pane active">
+                <div class="input-group">
+                    <label>Skema Warna (Mode Tema)</label>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="theme-btn" data-val="green" title="Standard Neon" style="flex: 1; height: 40px; background: #39ff14; border-radius: 8px; border: 2px solid transparent;"></button>
+                        <button class="theme-btn" data-val="blue" title="Deep Blue Ocean" style="flex: 1; height: 40px; background: #0088ff; border-radius: 8px; border: 2px solid transparent;"></button>
+                        <button class="theme-btn" data-val="red" title="Cyberpunk Red" style="flex: 1; height: 40px; background: #ff4444; border-radius: 8px; border: 2px solid transparent;"></button>
+                        <button class="theme-btn" data-val="purple" title="Royal Purple" style="flex: 1; height: 40px; background: #aa00ff; border-radius: 8px; border: 2px solid transparent;"></button>
+                    </div>
+                </div>
+
+                <div class="switch-container">
                     <div>
-                        <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">New Account</h2>
-                        <p class="text-[8px] text-gray-600 uppercase">Input unique sequence for registration</p>
+                        <p style="font-size: 12px; font-weight: bold;">Efek Pendaran (Toggle Glow)</p>
+                        <p style="font-size: 9px; color: var(--text-dim);">Aktifkan/Matikan shadow neon agar aplikasi lebih ringan.</p>
                     </div>
-                    <button id="close-register-btn" class="text-gray-500 hover:text-neon transition-colors"><i data-lucide="x"></i></button>
+                    <label class="switch">
+                        <input type="checkbox" id="set-glow-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
                 </div>
 
-                <div class="flex justify-center mb-10">
-                    <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
-                        <div class="w-28 h-28 rounded-full border-2 border-neon/40 group-hover:border-neon overflow-hidden transition-all shadow-neon-sm">
-                            <img id="register-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=new_user" class="w-full h-full object-cover">
-                        </div>
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                            <i data-lucide="camera" class="text-neon w-8 h-8"></i>
-                        </div>
-                        <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+                <div class="switch-container">
+                    <div>
+                        <p style="font-size: 12px; font-weight: bold;">Efek Kaca (Backdrop Blur)</p>
+                        <p style="font-size: 9px; color: var(--text-dim);">Matikan transparansi blur untuk menghemat RAM.</p>
                     </div>
+                    <label class="switch">
+                        <input type="checkbox" id="set-blur-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
                 </div>
+            </div>
 
-                <div class="space-y-5">
-                    <div class="input-group">
-                        <input type="text" id="reg-username" placeholder="Desired Username" class="input-field py-3">
+            <!-- Tab: Data -->
+            <div id="pane-data" class="settings-pane">
+                <div class="glass p-10 mb-10" style="background: rgba(255,255,255,0.02);">
+                    <p style="font-size: 11px; margin-bottom: 10px;">Kelola penyimpanan data lokal kamu secara aman.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="data-export" class="glass" style="flex: 1; padding: 12px; font-size: 10px; border-radius: 8px; text-transform: uppercase;"><i data-lucide="download" style="width: 12px; vertical-align: middle; margin-right: 5px;"></i> Cadangkan Data</button>
+                        <button id="data-import-btn" class="glass" style="flex: 1; padding: 12px; font-size: 10px; border-radius: 8px; text-transform: uppercase;"><i data-lucide="upload" style="width: 12px; vertical-align: middle; margin-right: 5px;"></i> Pulihkan Data</button>
+                        <input type="file" id="data-import-input" class="hidden" accept=".json">
                     </div>
-                    <div class="input-group">
-                        <input type="email" id="reg-email" placeholder="Email Address" class="input-field py-3">
-                    </div>
-                    <div class="input-group">
-                        <input type="password" id="reg-password" placeholder="Passphrase (Min 6)" class="input-field py-3">
-                    </div>
-                    <div id="reg-error" class="text-red-500 text-[9px] uppercase font-mono text-center h-4"></div>
-                    <button id="tombol-daftar" class="w-full bg-neon text-black font-bold py-6 rounded-sm uppercase text-lg tracking-widest hover:brightness-110 transition-all shadow-neon mt-4">
-                        Initialize Enrollment
-                    </button>
                 </div>
+                <button id="st-flush" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 8px; font-size: 10px; color: #ff4444; text-transform: uppercase; margin-top: 10px; background: rgba(255, 68, 68, 0.05);">Bersihkan Cache & Reset Total</button>
+            </div>
+
+            <!-- Tab: Prefs -->
+            <div id="pane-prefs" class="settings-pane">
+                <div class="switch-container">
+                    <div>
+                        <p style="font-size: 12px; font-weight: bold;">Jalankan Otomatis (Startup)</p>
+                        <p style="font-size: 9px; color: var(--text-dim);">Buka Lumina Home setiap kali Windows dinyalakan.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="set-startup-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: 9px; color: var(--text-dim); margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 4px;">Fitur ini disimulasikan untuk lingkungan Electron. Dalam mode browser, pengaturan akan disimpan saja.</p>
+            </div>
+
+            <!-- Tab: Info -->
+            <div id="pane-info" class="settings-pane">
+                <div class="text-center p-10">
+                    <h3 class="neon-text" style="font-size: 18px; margin-bottom: 5px;">LUMINA HOME</h3>
+                    <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 20px;">Versi 0.0.1.2-B <span style="color: var(--neon-color); font-weight: bold;">(UKRAINIAN HOPAK)</span></p>
+                    
+                    <div class="glass p-10" style="text-align: left; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 11px; line-height: 1.6;">
+                        <p>Selamat datang di <b>Lumina Home</b>. Aplikasi ini dirancang sebagai asisten produktivitas personal dengan estetika futuristik namun tetap hangat dan bersahabat. Semua data kamu disimpan secara lokal di komputer ini, membantu privasi kamu tetap terjaga.</p>
+                        <p style="margin-top: 10px;">Terima kasih telah menggunakan sistem kami. Semoga harimu menyenangkan dan teratur!</p>
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                        <p style="font-size: 10px; color: var(--text-dim);">Dibuat dengan cinta oleh:</p>
+                        <p style="font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-top: 5px; color: var(--neon-color);">[ DEVELOPER SIGNATURE ]</p>
+                        <p style="font-size: 8px; opacity: 0.3; margin-top: 5px;">2026 Lumina Home Systems. All Rights Reserved.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <button id="st-save" class="btn-neon" style="flex: 1;">Simpan Perubahan</button>
+                <button id="st-close" style="flex: 1; text-transform: uppercase; font-size: 12px; font-weight: bold;">Tutup</button>
             </div>
         </div>
     </div>
-        <!-- Routine Modal -->
-        <div id="routine-modal" class="modal hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div class="glass-card w-full max-w-sm p-8 border-neon/30">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-glow-neon uppercase tracking-tighter">Initialize Routine</h2>
-                    <button class="close-routine-modal text-gray-500 hover:text-white transition-colors" onclick="document.getElementById('routine-modal').classList.add('hidden')">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                
-                <div class="space-y-6">
-                    <div class="input-group">
-                        <label class="block text-[8px] uppercase tracking-widest text-[#39ff14]/50 mb-1">Protocol Identifier</label>
-                        <input type="text" id="modal-routine-content" placeholder="Routine Activity Name..." class="input-field">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="input-group">
-                            <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Execution Time</label>
-                            <input type="time" id="modal-routine-time" class="input-field">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Color Marker</label>
-                            <input type="color" id="modal-routine-color" value="#39ff14" class="w-full h-11 bg-transparent border-none cursor-pointer">
-                        </div>
-                    </div>
 
-                    <div class="input-group">
-                        <label class="block text-[8px] uppercase tracking-widest text-gray-600 mb-1">Termination Sequence (End Date)</label>
-                        <input type="date" id="modal-routine-end" class="input-field">
-                    </div>
+    <!-- ACCOUNT EDIT MODAL -->
+    <div id="account-edit-modal" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2 class="neon-text" style="margin-bottom: 25px; font-size: 18px;">EDIT IDENTITAS AKUN</h2>
+            
+            <div class="input-group">
+                <label>Access Alias (Username)</label>
+                <input type="text" id="acc-username" class="input-field" placeholder="Username">
+            </div>
 
-                    <p id="routine-error" class="text-red-500 text-[8px] uppercase font-mono h-2 opacity-0">Invalid parameters.</p>
-                    
-                    <button id="confirm-routine-btn" class="w-full bg-neon text-black font-bold py-4 rounded-sm uppercase text-[10px] tracking-widest hover:brightness-125 transition-all shadow-neon">
-                        Commit Routine Protocol
-                    </button>
-                </div>
+            <div class="input-group">
+                <label>Email Linkage</label>
+                <input type="email" id="acc-email" class="input-field" placeholder="email@lumina.home">
+            </div>
+            
+            <div class="input-group" style="padding-top: 10px;">
+                <label>Private Sequence (Password Baru)</label>
+                <input type="password" id="acc-password" class="input-field" placeholder="Kosongkan jika tidak diubah">
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button id="acc-save" class="btn-neon" style="flex: 1;">Perbarui Profil</button>
+                <button id="acc-close" style="flex: 1; text-transform: uppercase; font-size: 12px; font-weight: bold;">Batal</button>
             </div>
         </div>
+    </div>
 
-    <script type="module" src="/src/app.js"></script>
+    <!-- ACCOUNT INFO MODAL -->
+    <div id="account-info-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 400px; text-align: center;">
+            <h2 class="neon-text" style="margin-bottom: 20px; font-size: 18px;">INFORMASI TERMINAL</h2>
+            
+            <div style="margin-bottom: 25px;">
+                <img id="info-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--neon-color); margin-bottom: 15px;">
+                <h3 id="info-name" style="font-size: 20px; font-weight: 800;">USERNAME</h3>
+                <p id="info-email" style="font-size: 11px; color: var(--text-dim);">email@lumina.home</p>
+            </div>
+
+            <div class="glass p-10" style="text-align: left; font-size: 11px; background: rgba(0,0,0,0.2);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-dim);">ID Terminal:</span>
+                    <span id="info-id" style="font-family: 'JetBrains Mono', monospace;">U-123456</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-dim);">Status Akses:</span>
+                    <span style="color: var(--neon-color); font-weight: bold;">AUTHORIZED SYSTEM ADMIN</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-dim);">Lokasi Data:</span>
+                    <span>LOCAL_INDEX_STORAGE</span>
+                </div>
+            </div>
+
+            <button id="info-close" class="btn-neon w-full mt-20">Tutup Informasi</button>
+        </div>
+    </div>
+
+    <!-- ROUTINE MODAL -->
+    <div id="routine-modal" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2 class="neon-text" style="margin-bottom: 25px; font-size: 18px;">INITIALIZE ROUTINE</h2>
+            <div class="input-group">
+                <label>Routine Protocol Name</label>
+                <input type="text" id="rt-name" class="input-field" placeholder="e.g. Morning Coffee">
+            </div>
+            <div class="input-group">
+                <label>Execution Time</label>
+                <input type="time" id="rt-time" class="input-field">
+            </div>
+            <div class="input-group">
+                <label>Start Date</label>
+                <input type="date" id="rt-start" class="input-field">
+            </div>
+            <div class="input-group">
+                <label>Duration (Days)</label>
+                <input type="number" id="rt-duration" class="input-field" value="30" min="1">
+            </div>
+            <div class="input-group">
+                <label>Identify Color</label>
+                <input type="color" id="rt-color" value="#39ff14" class="w-full" style="height: 40px; background: none;">
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button id="rt-save" class="btn-neon" style="flex: 1;">Add Protocol</button>
+                <button id="rt-close" style="flex: 1; text-transform: uppercase; font-size: 12px; font-weight: bold;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- STATE MANAGEMENT --- */
+        const DB = {
+            get: (key) => JSON.parse(localStorage.getItem(key)) || [],
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+            currentUser: () => JSON.parse(localStorage.getItem('currentUser')) || null,
+            saveUser: (user) => localStorage.setItem('currentUser', JSON.stringify(user)),
+            users: () => JSON.parse(localStorage.getItem('users')) || []
+        };
+
+        let state = {
+            user: DB.currentUser(),
+            activeView: 'overview',
+            journals: [],
+            todos: [],
+            routines: [],
+            routineLogs: DB.get('routineLogs') || {}, // { date: { routineId: true } }
+            selectedJournal: null,
+            theme: localStorage.getItem('theme') || 'green'
+        };
+
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+
+        /* --- UI HELPERS --- */
+        function notify(msg) {
+            const n = document.createElement('div');
+            n.className = 'glass neon-border';
+            n.style.cssText = 'position: fixed; bottom: 30px; right: 30px; padding: 15px 25px; z-index: 10000; font-size: 12px; font-weight: bold; text-transform: uppercase; animation: slideIn 0.3s forwards;';
+            n.textContent = msg;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+
+        function refreshIcons() { if (window.lucide) lucide.createIcons(); }
+
+        /* --- AUTH MODULE --- */
+        function initAuth() {
+            const form = $('#auth-form');
+            const tabs = $$('.auth-tab');
+            const guestBtn = $('#auth-guest');
+            let mode = 'login';
+
+            tabs.forEach(tab => {
+                tab.onclick = () => {
+                    mode = tab.dataset.mode;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    $('#auth-title').innerText = mode === 'login' ? 'IDENTITY ACCESS' : 'ENROLLMENT PORTAL';
+                    $('#reg-fields').classList.toggle('hidden', mode === 'login');
+                    $('#auth-submit').innerText = mode === 'login' ? 'Verify Terminal' : 'Initialize Profile';
+                };
+            });
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const user = $('#auth-user').value;
+                const pass = $('#auth-pass').value;
+                const users = DB.users();
+
+                if (mode === 'login') {
+                    const found = users.find(u => u.username === user && u.password === pass);
+                    if (found) login(found);
+                    else alert('Incorrect sequence.');
+                } else {
+                    if (users.find(u => u.username === user)) return alert('Alias taken.');
+                    const newUser = {
+                        id: 'u-' + Date.now(),
+                        username: user,
+                        password: pass,
+                        email: $('#reg-email').value || 'agent@neural.core',
+                        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${$('#reg-seed').value || user}`,
+                        theme: 'green'
+                    };
+                    users.push(newUser);
+                    DB.set('users', users);
+                    login(newUser);
+                }
+            };
+
+            guestBtn.onclick = () => {
+                login({ username: 'Guest', email: 'guest@core.net', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=guest', isGuest: true });
+            };
+        }
+
+        function login(user) {
+            state.user = user;
+            DB.saveUser(user);
+            $('#auth-phase').style.display = 'none';
+            $('#app-dashboard').classList.add('active');
+            document.body.dataset.theme = user.theme || 'green';
+            updateProfileUI();
+            switchView('overview');
+            notify(`Welcome, Agent ${user.username}`);
+            initData();
+            checkDailyRoutineReset();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+
+        function updateProfileUI() {
+            $('#user-display-name').innerText = state.user.username.toUpperCase();
+            $('#dropdown-email').innerText = (state.user.email || 'agent@neural.core').toLowerCase();
+            $('#user-display-avatar').src = state.user.avatar;
+            
+            // Sync setting forms
+            $('#acc-username').value = state.user.username;
+            $('#acc-email').value = state.user.email || '';
+            
+            // Sync Profile Info
+            $('#info-avatar').src = state.user.avatar;
+            $('#info-name').innerText = state.user.username.toUpperCase();
+            $('#info-email').innerText = (state.user.email || 'agent@neural.core').toLowerCase();
+            $('#info-id').innerText = state.user.id || 'U-GUEST';
+        }
+
+        /* --- DASHBOARD CORE --- */
+        function initDashboard() {
+            // Apply visual preferences from local storage
+            const glow = localStorage.getItem('glowEnabled') !== 'false';
+            const blur = localStorage.getItem('blurEnabled') !== 'false';
+            document.body.classList.toggle('no-glow', !glow);
+            document.body.classList.toggle('no-blur', !blur);
+            $('#set-glow-toggle').checked = glow;
+            $('#set-blur-toggle').checked = blur;
+            $('#set-startup-toggle').checked = localStorage.getItem('startupEnabled') === 'true';
+
+            // Clock
+            setInterval(() => {
+                const now = new Date();
+                $('#display-time').innerText = now.toLocaleTimeString([], { hour12: false });
+                $('#display-date').innerText = now.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
+            }, 1000);
+
+            // Nav
+            const nav = $('.sidebar-nav');
+            let navTimeout;
+
+            $$('.nav-item').forEach(btn => {
+                btn.onclick = () => switchView(btn.dataset.view);
+            });
+
+            // Interactive Auto-hide Bottom Bar
+            const showNav = () => {
+                clearTimeout(navTimeout);
+                nav.classList.add('visible');
+            };
+
+            const hideNav = () => {
+                navTimeout = setTimeout(() => {
+                    nav.classList.remove('visible');
+                }, 3000);
+            };
+
+            document.addEventListener('mousemove', (e) => {
+                if (window.innerHeight - e.clientY < 60) {
+                    showNav();
+                } else if (!nav.matches(':hover')) {
+                    hideNav();
+                }
+            });
+
+            nav.addEventListener('mouseenter', showNav);
+            nav.addEventListener('mouseleave', hideNav);
+
+            // Initially show then hide
+            showNav();
+            hideNav();
+
+            // Profile Dropdown
+            $('#profile-trigger').onclick = (e) => {
+                e.stopPropagation();
+                $('#profile-dropdown').classList.toggle('active');
+            };
+            document.onclick = () => {
+                $('#profile-dropdown').classList.remove('active');
+            };
+
+            $$('.dropdown-item').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const action = btn.dataset.action;
+                    $('#profile-dropdown').classList.remove('active');
+                    if (action === 'logout') logout();
+                    if (action === 'settings') $('#settings-modal').classList.add('active');
+                    if (action === 'edit-account') $('#account-edit-modal').classList.add('active');
+                    if (action === 'account-info') $('#account-info-modal').classList.add('active');
+                };
+            });
+
+            // Settings Modal Tabs
+            $$('.settings-tab').forEach(tab => {
+                tab.onclick = () => {
+                    $$('.settings-tab').forEach(t => t.classList.remove('active'));
+                    $$('.settings-pane').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    $(`#pane-${tab.dataset.pane}`).classList.add('active');
+                };
+            });
+
+            // Settings Logic
+            $('#st-close').onclick = () => $('#settings-modal').classList.remove('active');
+            $('#acc-close').onclick = () => $('#account-edit-modal').classList.remove('active');
+            $('#info-close').onclick = () => $('#account-info-modal').classList.remove('active');
+
+            $$('.theme-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const t = btn.dataset.val;
+                    document.body.dataset.theme = t;
+                    state.theme = t;
+                    $$('.theme-btn').forEach(b => b.style.borderColor = 'transparent');
+                    btn.style.borderColor = 'white';
+                };
+            });
+
+            $('#st-save').onclick = () => {
+                // UI Preferences
+                const glow = $('#set-glow-toggle').checked;
+                const blur = $('#set-blur-toggle').checked;
+                const startup = $('#set-startup-toggle').checked;
+                
+                document.body.classList.toggle('no-glow', !glow);
+                document.body.classList.toggle('no-blur', !blur);
+                
+                localStorage.setItem('glowEnabled', glow);
+                localStorage.setItem('blurEnabled', blur);
+                localStorage.setItem('startupEnabled', startup);
+                
+                state.user.theme = state.theme;
+                DB.saveUser(state.user);
+                
+                const users = DB.users();
+                const idx = users.findIndex(u => u.username === state.user.username);
+                if (idx !== -1) {
+                    users[idx] = state.user;
+                    DB.set('users', users);
+                }
+                
+                $('#settings-modal').classList.remove('active');
+                notify('Konfigurasi Disimpan');
+            };
+
+            $('#acc-save').onclick = () => {
+                state.user.username = $('#acc-username').value;
+                state.user.email = $('#acc-email').value;
+                if ($('#acc-password').value) state.user.password = $('#acc-password').value;
+                
+                DB.saveUser(state.user);
+                const users = DB.users();
+                const idx = users.findIndex(u => u.id === state.user.id);
+                if (idx !== -1) {
+                    users[idx] = state.user;
+                    DB.set('users', users);
+                }
+                
+                updateProfileUI();
+                $('#account-edit-modal').classList.remove('active');
+                notify('Identitas Terverifikasi');
+            };
+
+            // Data Management
+            $('#data-export').onclick = () => {
+                const data = {
+                    version: '0.0.1.0-A',
+                    timestamp: new Date().toISOString(),
+                    payload: {}
+                };
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    data.payload[key] = localStorage.getItem(key);
+                }
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `lumina_home_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                notify('Export Data Berhasil');
+            };
+
+            $('#data-import-btn').onclick = () => $('#data-import-input').click();
+            $('#data-import-input').onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (data.payload) {
+                            Object.entries(data.payload).forEach(([key, val]) => {
+                                localStorage.setItem(key, val);
+                            });
+                            notify('Data Dipulihkan. Me-refresh...');
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    } catch (err) {
+                        alert('Format file cadangan tidak valid.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            $('#st-flush').onclick = () => { if(confirm('Hapus seluruh data lokal? Tindakan ini tidak dapat dibatalkan.')) { localStorage.clear(); location.reload(); } };
+        }
+
+        function switchView(view) {
+            state.activeView = view;
+            $$('.view-content').forEach(v => v.classList.remove('active'));
+            $$('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            $(`#view-${view}`).classList.add('active');
+            $(`.nav-item[data-view="${view}"]`).classList.add('active');
+            
+            if (view === 'journal') renderJournalList();
+            if (view === 'todo') { renderTodoList(); renderCalendar(); }
+            if (view === 'overview') renderOverview();
+            if (view === 'whiteboard') initWhiteboard();
+            if (view === 'music') initMusicPlayer();
+            if (view === 'data') renderData();
+            refreshIcons();
+        }
+
+        /* --- DATA MODULE --- */
+        function initData() {
+            const prefix = state.user.username;
+            state.journals = DB.get(`journal_${prefix}`);
+            state.todos = DB.get(`todo_${prefix}`);
+            state.routines = DB.get(`routine_${prefix}`);
+            state.routineLogs = DB.get(`routineLogs_${prefix}`) || {};
+        }
+
+        function checkDailyRoutineReset() {
+            const today = new Date().toISOString().split('T')[0];
+            const prefix = state.user.username;
+            if (!state.routineLogs[today]) {
+                state.routineLogs[today] = {};
+                DB.set(`routineLogs_${prefix}`, state.routineLogs);
+            }
+        }
+
+        function renderOverview() {
+            $('#stat-todos').innerText = state.todos.filter(t => !t.done).length.toString().padStart(2, '0');
+            $('#stat-journals').innerText = state.journals.length.toString().padStart(2, '0');
+            
+            // Render Activity Tracking
+            const activityList = $('#activity-tracking-list');
+            const completedCount = state.todos.filter(t => t.done).length;
+            activityList.innerHTML = `
+                <div class="glass p-10" style="border-left: 2px solid var(--neon-color);">
+                    <p style="font-size: 11px;">Objectives Synchronized: ${completedCount}</p>
+                    <p style="font-size: 9px; color: var(--text-dim);">Monitoring month-to-date throughput...</p>
+                </div>
+            `;
+
+            // Render Task Reminder
+            const reminderList = $('#task-reminder-list');
+            const today = new Date().toISOString().split('T')[0];
+            const pendingRoutines = state.routines.filter(r => !state.routineLogs[today]?.[r.id]);
+            reminderList.innerHTML = pendingRoutines.length > 0 ? 
+                pendingRoutines.map(r => `
+                    <div style="padding: 10px; border-left: 2px solid #ffa500; background: rgba(255, 165, 0, 0.05); margin-bottom: 5px;">
+                        <p style="font-size: 11px; font-weight: bold;">MISSING ROUTINE: ${r.name}</p>
+                        <p style="font-size: 9px; color: var(--text-dim);">Scheduled for: ${r.time}</p>
+                    </div>
+                `).join('') :
+                '<p style="font-size: 11px; color: var(--neon-color);">All protocols synchronized.</p>';
+            
+            // Data-driven Weekly Achievement Chart
+            const chart = $('#weekly-chart');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayLogs = days.map((day, idx) => {
+                // Simplified: count items completed on this day (mock data if none)
+                return Math.floor(Math.random() * 60 + 20); 
+            });
+
+            chart.innerHTML = dayLogs.map(val => `
+                <div class="chart-bar" style="height: ${val}%;"></div>
+            `).join('');
+        }
+
+        // Journal
+        function renderJournalList() {
+            const list = $('#jr-list');
+            list.innerHTML = state.journals.map((j, i) => `
+                <div class="journal-item glass ${state.selectedJournal === i ? 'active' : ''}" onclick="loadJournal(${i})">
+                    <h4>${j.title || 'Untitled'}</h4>
+                    <p>${j.date}</p>
+                </div>
+            `).join('');
+        }
+
+        window.loadJournal = (i) => {
+            state.selectedJournal = i;
+            const j = state.journals[i];
+            $('#journal-title').value = j.title;
+            $('#journal-body').value = j.body;
+            $('#jr-font').value = j.font || "'Inter', sans-serif";
+            $('#jr-size').value = j.size || 16;
+            $('#jr-spacing').value = j.spacing || 1.6;
+            $('#jr-align').value = j.align || 'left';
+            $('#jr-color').value = j.color || '#e0e0e0';
+            $('#jr-paper').value = j.paper || '#0a0b10';
+            $('#jr-paper-style').value = j.paperStyle || 'plain';
+            applyJournalStyle();
+            renderJournalList();
+        };
+
+        function applyJournalStyle() {
+            const b = $('#journal-body');
+            const box = $('#journal-canvas');
+            b.style.fontFamily = $('#jr-font').value;
+            b.style.fontSize = $('#jr-size').value + 'px';
+            b.style.lineHeight = $('#jr-spacing').value;
+            b.style.textAlign = $('#jr-align').value;
+            b.style.color = $('#jr-color').value;
+            box.style.backgroundColor = $('#jr-paper').value;
+            box.classList.toggle('paper-lined', $('#jr-paper-style').value === 'lined');
+        }
+
+        $('#jr-font').onchange = applyJournalStyle;
+        $('#jr-size').oninput = applyJournalStyle;
+        $('#jr-spacing').oninput = applyJournalStyle;
+        $('#jr-align').onchange = applyJournalStyle;
+        $('#jr-color').oninput = applyJournalStyle;
+        $('#jr-paper').oninput = applyJournalStyle;
+        $('#jr-paper-style').onchange = applyJournalStyle;
+
+        $('#jr-new-btn').onclick = () => {
+            state.selectedJournal = null;
+            $('#journal-title').value = '';
+            $('#journal-body').value = '';
+            renderJournalList();
+        };
+
+        $('#jr-save-btn').onclick = () => {
+            const j = {
+                title: $('#journal-title').value || 'Untitled',
+                body: $('#journal-body').value,
+                date: new Date().toLocaleDateString(),
+                font: $('#jr-font').value,
+                size: $('#jr-size').value,
+                spacing: $('#jr-spacing').value,
+                align: $('#jr-align').value,
+                color: $('#jr-color').value,
+                paper: $('#jr-paper').value,
+                paperStyle: $('#jr-paper-style').value
+            };
+            if (state.selectedJournal !== null) state.journals[state.selectedJournal] = j;
+            else state.journals.unshift(j);
+            
+            DB.set(`journal_${state.user.username}`, state.journals);
+            notify('Logs Synchronized');
+            renderJournalList();
+        };
+
+        // Todo
+        function renderTodoList() {
+            const list = $('#todo-display-list');
+            const today = new Date().toISOString().split('T')[0];
+            const logs = state.routineLogs[today] || {};
+
+            let html = '';
+            
+            // Routines first
+            state.routines.forEach(r => {
+                const done = logs[r.id];
+                html += `
+                    <div class="todo-item glass ${done ? 'completed' : ''}" style="border-left: 3px solid ${r.color || 'var(--neon-color)'}">
+                        <div class="todo-checkbox ${done ? 'checked' : ''}" onclick="toggleRoutine('${r.id}')">
+                            ${done ? '<i data-lucide="check" style="width: 12px; height: 12px;"></i>' : ''}
+                        </div>
+                        <span class="todo-text">[ROUTINE] ${r.name} @ ${r.time}</span>
+                    </div>
+                `;
+            });
+
+            // Normal Todos
+            state.todos.forEach((t, i) => {
+                html += `
+                    <div class="todo-item glass ${t.done ? 'completed' : ''}">
+                        <div class="todo-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTodo(${i})">
+                            ${t.done ? '<i data-lucide="check" style="width: 12px; height: 12px;"></i>' : ''}
+                        </div>
+                        <span class="todo-text">${t.text}</span>
+                        <button onclick="deleteTodo(${i})" style="opacity: 0.3;"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html || '<p style="text-align: center; opacity: 0.3; padding-top: 50px;">No objectives found.</p>';
+            refreshIcons();
+        }
+
+        window.toggleRoutine = (id) => {
+            const today = new Date().toISOString().split('T')[0];
+            const prefix = state.user.username;
+            if (!state.routineLogs[today]) state.routineLogs[today] = {};
+            state.routineLogs[today][id] = !state.routineLogs[today][id];
+            DB.set(`routineLogs_${prefix}`, state.routineLogs);
+            renderTodoList();
+            renderOverview();
+        };
+
+        window.toggleTodo = (i) => {
+            state.todos[i].done = !state.todos[i].done;
+            DB.set(`todo_${state.user.username}`, state.todos);
+            renderTodoList();
+            renderOverview();
+        };
+
+        window.deleteTodo = (i) => {
+            state.todos.splice(i, 1);
+            DB.set(`todo_${state.user.username}`, state.todos);
+            renderTodoList();
+        };
+
+        $('#todo-add-btn').onclick = () => {
+            const txt = $('#todo-input').value;
+            if (!txt) return;
+            state.todos.unshift({ text: txt, done: false, date: new Date().toISOString() });
+            DB.set(`todo_${state.user.username}`, state.todos);
+            $('#todo-input').value = '';
+            renderTodoList();
+        };
+
+        // Calendar
+        let calDate = new Date();
+        function renderCalendar() {
+            const daysContainer = $('#cal-days');
+            const monthName = $('#cal-month-name');
+            daysContainer.innerHTML = '';
+            
+            const month = calDate.getMonth();
+            const year = calDate.getFullYear();
+            monthName.innerText = calDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) daysContainer.innerHTML += '<div></div>';
+            for (let d = 1; d <= lastDay; d++) {
+                const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+                const hasRoutine = state.routines.length > 0; // Simple indicator for now
+                const isCurrent = new Date().getDate() === d && new Date().getMonth() === month && new Date().getFullYear() === year;
+                daysContainer.innerHTML += `<div class="cal-day ${isCurrent ? 'active' : ''} ${hasRoutine ? 'has-event' : ''}" onclick="selectDate('${dateStr}')">${d}</div>`;
+            }
+
+            renderDayEvents();
+        }
+
+        window.selectDate = (date) => {
+            calDate = new Date(date);
+            renderCalendar();
+        };
+
+        function renderDayEvents() {
+            const dateStr = calDate.toISOString().split('T')[0];
+            const logs = state.routineLogs[dateStr] || {};
+            const items = $('#day-event-items');
+            items.innerHTML = state.routines.map(r => `
+                <div style="font-size: 11px; padding: 5px; border-radius: 4px; border-left: 2px solid ${r.color || 'var(--neon-color)'}; background: rgba(255,255,255,0.03);">
+                    ${r.name} @ ${r.time}
+                    <span style="opacity: 0.5; float: right;">${logs[r.id] ? 'COMPLETED' : 'PENDING'}</span>
+                </div>
+            `).join('') || '<p style="font-size: 9px; opacity: 0.3;">No routines scheduled.</p>';
+        }
+
+        $('#cal-prev').onclick = () => { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); };
+        $('#cal-next').onclick = () => { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); };
+
+        // Routine
+        $('#routine-open-btn').onclick = () => $('#routine-modal').classList.add('active');
+        $('#rt-close').onclick = () => $('#routine-modal').classList.remove('active');
+        $('#rt-save').onclick = () => {
+            const name = $('#rt-name').value;
+            const time = $('#rt-time').value;
+            const start = $('#rt-start').value;
+            const duration = $('#rt-duration').value;
+            const color = $('#rt-color').value;
+
+            if (!name || !time) return;
+            state.routines.push({ 
+                id: 'r-' + Date.now(),
+                name, time, start, duration, color 
+            });
+            DB.set(`routine_${state.user.username}`, state.routines);
+            $('#routine-modal').classList.remove('active');
+            notify('Routine Protocol Initialized');
+            renderTodoList();
+        };
+
+        /* --- WHITEBOARD MODULE --- */
+        let canvas, ctx, drawing = false, lastPos, history = [], historyStep = -1;
+        let wbTool = 'pen';
+
+        function initWhiteboard() {
+            if (canvas) return;
+            canvas = $('#wb-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set fixed resolution
+            canvas.width = 1000;
+            canvas.height = 1000;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0,0,1000,1000);
+
+            canvas.onmousedown = (e) => { 
+                drawing = true; 
+                lastPos = getPos(e); 
+                if (wbTool === 'bucket') {
+                    fillArea(lastPos.x, lastPos.y, $('#wb-color').value);
+                    saveHistory();
+                    drawing = false;
+                    return;
+                }
+                ctx.beginPath(); 
+                ctx.moveTo(lastPos.x, lastPos.y); 
+            };
+            canvas.onmousemove = drag;
+            canvas.onmouseup = () => { if(!drawing) return; drawing = false; saveHistory(); };
+            
+            $$('.tool-btn').forEach(btn => {
+                btn.onclick = () => {
+                    $$('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    wbTool = btn.dataset.tool;
+                };
+            });
+
+            $('#wb-clear').onclick = () => { ctx.fillStyle = '#fff'; ctx.fillRect(0,0,1000,1000); saveHistory(); };
+            $('#wb-undo').onclick = () => { if(historyStep > 0) { historyStep--; restoreHistory(); } };
+            $('#wb-redo').onclick = () => { if(historyStep < history.length - 1) { historyStep++; restoreHistory(); } };
+            $('#wb-save').onclick = () => { const link = document.createElement('a'); link.download = 'sketch.png'; link.href = canvas.toDataURL(); link.click(); };
+            
+            saveHistory();
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        }
+
+        function drag(e) {
+            if (!drawing) return;
+            const pos = getPos(e);
+            const color = $('#wb-color').value;
+            const width = $('#wb-width').value;
+            const sym = parseInt($('#wb-sym').value);
+            const ruler = $('#wb-ruler').value;
+
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = wbTool === 'eraser' ? '#ffffff' : color;
+
+            if (ruler === 'line') {
+                // To implement real line ruler we would need a ghost preview, 
+                // for this quick version we just force straight lines from lastPos if held.
+            }
+
+            drawSymmetric(lastPos, pos, sym);
+            lastPos = pos;
+        }
+
+        function drawSymmetric(p1, p2, count) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            for (let i = 0; i < count; i++) {
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate((Math.PI * 2 / count) * i);
+                ctx.translate(-centerX, -centerY);
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function fillArea(startX, startY, fillRGB) {
+            // Very basic fill algorithm for performance
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            const [fr, fg, fb] = hexToRgb(fillRGB);
+            const targetColor = getPixelColor(startX, startY, data);
+            
+            if (colorsMatch(targetColor, [fr, fg, fb])) return;
+
+            const stack = [[Math.floor(startX), Math.floor(startY)]];
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                const i = (y * canvas.width + x) * 4;
+                if (colorsMatch([data[i], data[i+1], data[i+2]], targetColor)) {
+                    data[i] = fr; data[i+1] = fg; data[i+2] = fb; data[i+3] = 255;
+                    if (x > 0) stack.push([x - 1, y]);
+                    if (x < canvas.width - 1) stack.push([x + 1, y]);
+                    if (y > 0) stack.push([x, y - 1]);
+                    if (y < canvas.height - 1) stack.push([x, y + 1]);
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+        }
+        function getPixelColor(x, y, data) {
+            const i = (Math.floor(y) * canvas.width + Math.floor(x)) * 4;
+            return [data[i], data[i+1], data[i+2]];
+        }
+        function colorsMatch(c1, c2) { return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2]; }
+
+        function saveHistory() {
+            history = history.slice(0, historyStep + 1);
+            history.push(canvas.toDataURL());
+            if (history.length > 50) history.shift();
+            else historyStep++;
+        }
+
+        function restoreHistory() {
+            const img = new Image();
+            img.src = history[historyStep];
+            img.onload = () => { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
+        }
+
+        /* --- DATA VIEW --- */
+        function renderData() {
+            const achievementList = $('#routine-achievement-list');
+            const totalRoutines = state.routines.length;
+            const completedToday = Object.values(state.routineLogs[new Date().toISOString().split('T')[0]] || {}).filter(v => v).length;
+            
+            achievementList.innerHTML = state.routines.map(r => {
+                const logs = Object.values(state.routineLogs).filter(day => day[r.id]).length;
+                return `
+                    <div class="glass p-10">
+                        <h4 style="font-size: 12px; margin-bottom: 5px;">${r.name}</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px;">
+                                <div style="width: ${Math.min(logs * 10, 100)}%; height: 100%; background: ${r.color || 'var(--neon-color)'};"></div>
+                            </div>
+                            <span style="font-size: 10px;">${logs} completions</span>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p style="text-align: center; opacity: 0.3;">No protocol data available.</p>';
+        }
+
+        /* --- MUSIC PLAYER MODULE --- */
+        let mpPlaylist = [], mpCurrentIndex = -1, mpIsPlaying = false, mpInited = false;
+        let mpShuffle = false, mpRepeat = false;
+        
+        function initMusicPlayer() {
+            if (mpInited) return;
+            mpInited = true;
+
+            const mpAudio = $('#mp-audio-engine');
+            const fileInput = $('#mp-file-input');
+            const addBtn = $('#mp-add-btn');
+            const playPauseBtn = $('#mp-play-pause');
+            const prevBtn = $('#mp-prev');
+            const nextBtn = $('#mp-next');
+            const shuffleBtn = $('#mp-shuffle');
+            const repeatBtn = $('#mp-repeat');
+            const timeline = $('#mp-timeline');
+            const progress = $('#mp-progress');
+            const togglePlaylist = $('#mp-toggle-playlist');
+            const playlistPanel = $('#mp-playlist');
+
+            addBtn.onclick = () => fileInput.click();
+
+            shuffleBtn.onclick = () => {
+                mpShuffle = !mpShuffle;
+                shuffleBtn.classList.toggle('active', mpShuffle);
+                notify(`Shuffle ${mpShuffle ? 'ON' : 'OFF'}`);
+            };
+
+            repeatBtn.onclick = () => {
+                mpRepeat = !mpRepeat;
+                repeatBtn.classList.toggle('active', mpRepeat);
+                notify(`Repeat ${mpRepeat ? 'ON' : 'OFF'}`);
+            };
+
+            fileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    mpPlaylist.push({
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: "Local File",
+                        url: url
+                    });
+                });
+                renderMPQueue();
+                if (mpCurrentIndex === -1 && mpPlaylist.length > 0) {
+                    loadTrack(0);
+                }
+                notify(`${files.length} lagu ditambahkan`);
+            };
+
+            togglePlaylist.onclick = (e) => {
+                e.stopPropagation();
+                playlistPanel.classList.toggle('active');
+            };
+
+            playlistPanel.onclick = (e) => e.stopPropagation();
+            document.addEventListener('click', () => playlistPanel.classList.remove('active'));
+
+            playPauseBtn.onclick = () => {
+                if (mpCurrentIndex === -1) return;
+                if (mpIsPlaying) pauseTrack();
+                else playTrack();
+            };
+
+            prevBtn.onclick = () => {
+                if (mpPlaylist.length === 0) return;
+                let newIdx = mpCurrentIndex - 1;
+                if (newIdx < 0) newIdx = mpPlaylist.length - 1;
+                loadTrack(newIdx);
+                playTrack();
+            };
+
+            nextBtn.onclick = () => {
+                if (mpPlaylist.length === 0) return;
+                let newIdx;
+                if (mpShuffle) {
+                    newIdx = Math.floor(Math.random() * mpPlaylist.length);
+                } else {
+                    newIdx = mpCurrentIndex + 1;
+                    if (newIdx >= mpPlaylist.length) newIdx = 0;
+                }
+                loadTrack(newIdx);
+                playTrack();
+            };
+
+            timeline.onclick = (e) => {
+                if (!mpAudio.duration) return;
+                const rect = timeline.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                mpAudio.currentTime = pos * mpAudio.duration;
+            };
+
+            mpAudio.ontimeupdate = () => {
+                const cur = mpAudio.currentTime;
+                const dur = mpAudio.duration;
+                if (!dur) return;
+                const percent = (cur / dur) * 100;
+                progress.style.width = `${percent}%`;
+                $('#mp-current-time').innerText = formatMPTime(cur);
+                $('#mp-total-time').innerText = formatMPTime(dur);
+            };
+
+            mpAudio.onended = () => {
+                if (mpRepeat) {
+                    mpAudio.currentTime = 0;
+                    playTrack();
+                } else {
+                    nextBtn.click();
+                }
+            };
+
+            window.loadTrack = (index) => {
+                const mpAudio = $('#mp-audio-engine');
+                mpCurrentIndex = index;
+                const track = mpPlaylist[index];
+                mpAudio.src = track.url;
+                $('#mp-song-title').innerText = track.title;
+                $('#mp-song-artist').innerText = track.artist;
+                
+                $('#mp-art-fallback').classList.remove('hidden');
+                $('#mp-art-img').classList.add('hidden');
+                
+                renderMPQueue();
+            };
+
+            window.playTrack = () => {
+                const mpAudio = $('#mp-audio-engine');
+                if (mpCurrentIndex === -1) return;
+                mpAudio.play();
+                mpIsPlaying = true;
+                $('#mp-play-pause').innerHTML = '<i data-lucide="pause" style="width: 22px; height: 22px;"></i>';
+                refreshIcons();
+                renderMPQueue();
+            };
+
+            window.pauseTrack = () => {
+                const mpAudio = $('#mp-audio-engine');
+                mpAudio.pause();
+                mpIsPlaying = false;
+                $('#mp-play-pause').innerHTML = '<i data-lucide="play" style="width: 22px; height: 22px; margin-left: 2px;"></i>';
+                refreshIcons();
+                renderMPQueue();
+            };
+        }
+
+        function renderMPQueue() {
+            const queueList = $('#mp-queue');
+            if (mpPlaylist.length === 0) {
+                queueList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; opacity: 0.3;">
+                        <i data-lucide="disc" style="width: 40px; height: 40px; margin-bottom: 10px;"></i>
+                        <p style="font-size: 10px;">Belum ada lagu di antrian</p>
+                    </div>
+                `;
+                refreshIcons();
+                return;
+            }
+
+            queueList.innerHTML = mpPlaylist.map((track, i) => `
+                <div class="mp-queue-item ${i === mpCurrentIndex ? 'active' : ''}" onclick="loadTrack(${i}); playTrack();">
+                    <div class="qi-info">
+                        <div class="qi-title">${track.title}</div>
+                        <div class="qi-artist">${track.artist}</div>
+                    </div>
+                    ${i === mpCurrentIndex && mpIsPlaying ? '<i data-lucide="volume-2" style="width: 14px; color: var(--neon-color);"></i>' : ''}
+                </div>
+            `).join('');
+            refreshIcons();
+        }
+
+        function formatMPTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        /* --- LOCK SCREEN MODULE --- */
+        function lockScreen() {
+            const ls = $('#lock-screen');
+            ls.style.display = 'flex';
+            setTimeout(() => ls.classList.add('active'), 10);
+            $('#lock-user-avatar').src = state.user.avatar;
+            $('#lock-user-name').innerText = state.user.username.toUpperCase();
+            $('#lock-input').value = '';
+            $('#lock-input').focus();
+        }
+
+        $('#lock-submit').onclick = () => {
+            if ($('#lock-input').value === state.user.password || state.user.isGuest) {
+                $('#lock-screen').classList.remove('active');
+                setTimeout(() => $('#lock-screen').style.display = 'none', 500);
+            } else {
+                alert('ACCESS DENIED');
+                $('#lock-input').value = '';
+            }
+        };
+
+        /* --- START APP --- */
+        window.onload = () => {
+            initAuth();
+            initDashboard();
+            if (state.user) login(state.user);
+            refreshIcons();
+        };
+
+    </script>
 </body>
 </html>
